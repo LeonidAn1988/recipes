@@ -39,6 +39,86 @@ function toGrams(amount, unit, product) {
   return amount * factor;
 }
 
+// --- Дробные количества ---
+//
+// В поле количества можно писать как привыкли в рецептах: «1/2», «1 1/2»,
+// «½», «1½», «0,5», «0.5». Хранится всегда число, а показывается простой
+// дробью, если число к ней близко: 0.5 → «½», 1.25 → «1 ¼».
+
+const VULGAR_FRACTIONS = { "½": 1 / 2, "⅓": 1 / 3, "⅔": 2 / 3, "¼": 1 / 4, "¾": 3 / 4, "⅛": 1 / 8, "⅜": 3 / 8, "⅝": 5 / 8, "⅞": 7 / 8 };
+// Показываем только привычные кухонные доли; восьмые («4 ⅞ шт») читаются хуже
+// десятичной записи. Ввести ⅛ при этом можно — см. VULGAR_FRACTIONS.
+const FRACTION_STEPS = [
+  [1 / 4, "¼", "1/4"], [1 / 3, "⅓", "1/3"], [1 / 2, "½", "1/2"], [2 / 3, "⅔", "2/3"], [3 / 4, "¾", "3/4"]
+];
+
+// Возвращает число или NaN, если строку не удалось разобрать.
+function parseAmount(text) {
+  let str = String(text ?? "").trim().replace(",", ".");
+  if (str === "") return NaN;
+
+  let whole = 0;
+  for (const [sym, val] of Object.entries(VULGAR_FRACTIONS)) {
+    if (str.endsWith(sym)) {
+      const head = str.slice(0, -sym.length).trim();
+      if (head !== "" && !/^\d+$/.test(head)) return NaN;
+      return (head === "" ? 0 : Number(head)) + val;
+    }
+  }
+
+  const mixed = str.match(/^(\d+)[\s-]+(\d+)\s*\/\s*(\d+)$/);
+  if (mixed) {
+    whole = Number(mixed[1]);
+    str = `${mixed[2]}/${mixed[3]}`;
+  }
+  const frac = str.match(/^(\d+)\s*\/\s*(\d+)$/);
+  if (frac) {
+    const den = Number(frac[2]);
+    return den > 0 ? whole + Number(frac[1]) / den : NaN;
+  }
+  return /^\d*\.?\d+$/.test(str) ? Number(str) : NaN;
+}
+
+// pretty: «1 ½» для показа; иначе «1 1/2» — так удобнее править в поле ввода.
+function formatAmount(n, pretty = true) {
+  if (!(n > 0)) return n === 0 ? "0" : "";
+  const whole = Math.floor(n + 1e-9);
+  const rest = n - whole;
+  if (rest < 0.01) return String(whole);
+  const hit = FRACTION_STEPS.find(([v]) => Math.abs(rest - v) < 0.01);
+  if (hit) {
+    const f = pretty ? hit[1] : hit[2];
+    return whole > 0 ? `${whole} ${f}` : f;
+  }
+  if (1 - rest < 0.01) return String(whole + 1);
+  return Number(n).toLocaleString("ru-RU", { maximumFractionDigits: n < 1 ? 2 : 1 });
+}
+
+// --- Отходы и чистый выход ---
+//
+// Количества в рецепте — чистый вес (нетто), то, что идёт в блюдо.
+// Отходы при очистке задаются в процентах от веса до очистки (брутто):
+// нетто = брутто × (1 − отходы/100). Процент берётся из самого ингредиента
+// рецепта (если его поправили под свою разделку), иначе из продукта.
+
+function clampWaste(value) {
+  const n = Number(value);
+  return n > 0 ? Math.min(n, 95) : 0;
+}
+
+function ingredientWaste(ingredient, product) {
+  if (ingredient.waste !== undefined && ingredient.waste !== null) return clampWaste(ingredient.waste);
+  return clampWaste(product ? product.waste : 0);
+}
+
+function netFromGross(gross, waste) {
+  return gross * (1 - clampWaste(waste) / 100);
+}
+
+function grossFromNet(net, waste) {
+  return net / (1 - clampWaste(waste) / 100);
+}
+
 // Считает БЖУ/ккал одного ингредиента.
 function calcIngredient(ingredient) {
   const product = findProduct(ingredient.product);
@@ -136,7 +216,7 @@ function giCategory(gi) {
 function formatQuantity(product, grams) {
   if (grams <= 0) return "по вкусу";
 
-  const round = (n, d = 1) => Number(n.toFixed(d)).toString();
+  const round = (n, d = 1) => Number(n.toFixed(d)).toLocaleString("ru-RU", { maximumFractionDigits: d });
 
   // Мелочь вроде лаврового листа весит доли грамма — округление до целых
   // превратило бы её в «0 г».

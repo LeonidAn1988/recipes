@@ -930,20 +930,6 @@ body {
   border-style: dashed;
 }
 
-.row-actions {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.1rem;
-  white-space: nowrap;
-}
-.move-btns { display: inline-flex; gap: 0.1rem; }
-.btn-move {
-  font-size: 1rem;
-  min-width: 2rem;
-  min-height: 2rem;
-}
-.btn-move:hover { color: var(--accent); }
-.btn-move:disabled { opacity: 0.25; cursor: default; background: transparent; }
 
 /* На телефоне строка ингредиента — в две линии: название на всю ширину,
    под ним количество, единица и кнопки. В одну линию название сжимается
@@ -952,14 +938,15 @@ body {
   #recipeForm .form-table thead { display: none; }
   #formIngredients tr {
     display: grid;
-    grid-template-columns: 1fr 1fr auto;
+    grid-template-columns: auto 1fr 1fr auto;
     gap: 0.35rem;
     padding: 0.5rem 0;
     border-bottom: 1px solid var(--border);
   }
   #formIngredients tr:last-child { border-bottom: none; }
   #formIngredients td { padding: 0; }
-  #formIngredients td:first-child { grid-column: 1 / -1; }
+  #formIngredients td.drag-cell { grid-row: span 2; display: flex; align-items: center; }
+  #formIngredients td:nth-child(2) { grid-column: 2 / -1; }
 }
 
 .kcal-filter { margin-bottom: 0.9rem; }
@@ -990,4 +977,118 @@ body {
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
+}
+
+/* ───────── Калькулятор выхода ───────── */
+
+.yield-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  margin-bottom: 0.6rem;
+}
+.yield-controls > label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  flex: 1 1 220px;
+}
+.yield-amount { display: flex; gap: 0.4rem; align-items: center; }
+.yield-amount input,
+.yield-waste input,
+.yield-waste-cell input {
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.92rem;
+}
+.yield-amount input { flex: 1; min-width: 0; }
+.yield-unit-text { color: var(--text-muted); font-size: 0.9rem; }
+.yield-dirty {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  margin-bottom: 0.8rem;
+  font-size: 0.88rem;
+}
+.yield-dirty.hidden { display: none; }
+.yield-waste { display: inline-flex; align-items: center; gap: 0.35rem; color: var(--text-muted); }
+.yield-waste input { width: 4.5rem; padding: 0.35rem 0.5rem; }
+.yield-waste-cell { white-space: nowrap; }
+.yield-waste-cell input { width: 3.8rem; padding: 0.25rem 0.4rem; font-size: 0.85rem; text-align: right; }
+.yield-summary {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 0.7rem 0.9rem;
+  line-height: 1.5;
+  margin: 0 0 0.8rem;
+}
+.yield-gross { font-weight: 600; }
+#yieldToMenuBtn { margin-top: 0.4rem; }
+
+/* ───────── Перетаскивание строк формы ───────── */
+
+.drag-cell { width: 1.8rem; padding-right: 0 !important; }
+.drag-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.8rem;
+  height: 2.2rem;
+  font-size: 1.15rem;
+  color: var(--text-muted);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  border-radius: 6px;
+}
+.drag-handle:hover { color: var(--accent); background: var(--surface-alt); }
+body.is-dragging,
+body.is-dragging * { cursor: grabbing !important; user-select: none; -webkit-user-select: none; }
+.dragging {
+  position: relative;
+  z-index: 2;
+  background: var(--surface-alt);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  border-radius: 8px;
+}
+.step-title { display: inline-flex; align-items: center; gap: 0.3rem; }
+
+/* На телефоне строки калькулятора — карточки: название сверху, под ним
+   чистый вес, сколько взять до очистки и процент отходов. В таблицу
+   колонка «взять» не помещалась и уезжала за край. */
+@media (max-width: 760px) {
+  #yieldResult .table-scroll { overflow: visible; border: none; }
+  #yieldResult thead { display: none; }
+  #yieldTable tr {
+    display: grid;
+    grid-template-columns: 1fr 1fr 5.2rem;
+    gap: 0.2rem 0.6rem;
+    padding: 0.6rem 0.2rem;
+    border-bottom: 1px solid var(--border);
+  }
+  #yieldTable td { padding: 0; border: none; text-align: left; }
+  #yieldTable td:nth-child(1) { grid-column: 1 / -1; font-weight: 600; }
+  #yieldTable td:nth-child(2) { order: 2; }
+  #yieldTable td:nth-child(4) { order: 3; }
+  #yieldTable td:nth-child(3) { order: 4; align-self: end; text-align: right; }
+  #yieldTable td:nth-child(2)::before,
+  #yieldTable td:nth-child(4)::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 400;
+    color: var(--text-muted);
+  }
 }

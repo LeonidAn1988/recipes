@@ -319,7 +319,7 @@ function renderIngredientsTable(recipe, rows, total) {
     const r = rows[i];
     const tr = buildRow([
       { text: ing.product },
-      { text: fmt(ing.amount), cls: "num" },
+      { text: ing.unit === "по вкусу" ? "" : formatAmount(Number(ing.amount) || 0), cls: "num" },
       { text: ing.unit },
       { text: r.grams ? Math.round(r.grams) : "—", cls: "num" },
       { text: r.known ? Math.round(r.kcal) : "—", cls: "num" },
@@ -460,6 +460,7 @@ function renderDetail() {
   renderIngredientsTable(recipe, rows, total);
   renderSteps(recipe);
   renderVideo(recipe);
+  renderYield(recipe);
 }
 
 // Теги в карточке кликабельны: нажатие показывает все рецепты с этим тегом.
@@ -489,45 +490,89 @@ function renderRecipesView() {
 
 // --- Форма: порядок строк ---
 
-// Кнопки ↑ ↓ для строки формы. На телефоне они надёжнее перетаскивания:
-// прокрутка длинной формы мешает тянуть строку пальцем. Порядок берётся
-// прямо из DOM при сохранении, поэтому достаточно переставить узел.
-function moveButtons(row, what, onMove) {
-  const wrap = document.createElement("span");
-  wrap.className = "move-btns";
-  [["↑", -1, "Выше"], ["↓", 1, "Ниже"]].forEach(([label, dir, hint]) => {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "btn-icon btn-move";
-    btn.textContent = label;
-    btn.title = `${hint}: переместить ${what}`;
-    btn.setAttribute("aria-label", btn.title);
-    btn.addEventListener("click", () => {
-      const sibling = dir < 0 ? row.previousElementSibling : row.nextElementSibling;
-      if (!sibling) return;
-      row.parentNode.insertBefore(row, dir < 0 ? sibling : sibling.nextElementSibling);
-      if (onMove) onMove();
-      btn.focus();
-    });
-    wrap.appendChild(btn);
-  });
-  return wrap;
-}
+// Ручка перетаскивания для строки формы. Работает на Pointer Events, поэтому
+// одинаково мышью и пальцем; у ручки touch-action: none — пока её тянут,
+// страница не прокручивается. Порядок берётся прямо из DOM при сохранении,
+// так что достаточно переставить узел. У края окна список прокручивается сам.
+function dragHandle(row, what, onDrop) {
+  const handle = document.createElement("span");
+  handle.className = "drag-handle";
+  handle.textContent = "⠿";
+  handle.title = `Потяните, чтобы переместить ${what}`;
+  handle.setAttribute("aria-hidden", "true");
 
-// Крайние строки не двигаются дальше края — гасим у них лишнюю стрелку.
-function refreshMoveButtons(container) {
-  const rows = [...container.children];
-  rows.forEach((row, i) => {
-    const [up, down] = row.querySelectorAll(".btn-move");
-    if (up) up.disabled = i === 0;
-    if (down) down.disabled = i === rows.length - 1;
+  let scroller = null;
+  let lastY = 0;
+  let scrollTimer = null;
+
+  function reorder(y) {
+    const siblings = [...row.parentNode.children].filter(n => n !== row);
+    const next = siblings.find(n => {
+      const r = n.getBoundingClientRect();
+      return y < r.top + r.height / 2;
+    });
+    if (next) {
+      if (row.nextElementSibling !== next) row.parentNode.insertBefore(row, next);
+    } else if (row.parentNode.lastElementChild !== row) {
+      row.parentNode.appendChild(row);
+    }
+  }
+
+  function autoScroll() {
+    if (!scroller) return;
+    const r = scroller.getBoundingClientRect();
+    const edge = 60;
+    let dy = 0;
+    if (lastY < r.top + edge) dy = -Math.ceil((r.top + edge - lastY) / 4);
+    else if (lastY > r.bottom - edge) dy = Math.ceil((lastY - (r.bottom - edge)) / 4);
+    if (dy !== 0) {
+      scroller.scrollTop += dy;
+      reorder(lastY);
+    }
+    scrollTimer = requestAnimationFrame(autoScroll);
+  }
+
+  // Слушаем документ, а не саму ручку: при переносе строки в DOM браузер
+  // снимает захват указателя, и события ручке перестают приходить.
+  function onMove(e) {
+    lastY = e.clientY;
+    reorder(lastY);
+    e.preventDefault();
+  }
+
+  function finish() {
+    row.classList.remove("dragging");
+    document.body.classList.remove("is-dragging");
+    cancelAnimationFrame(scrollTimer);
+    document.removeEventListener("pointermove", onMove);
+    document.removeEventListener("pointerup", finish);
+    document.removeEventListener("pointercancel", finish);
+    if (onDrop) onDrop();
+  }
+
+  handle.addEventListener("pointerdown", e => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    scroller = row.closest(".modal-content");
+    lastY = e.clientY;
+    row.classList.add("dragging");
+    document.body.classList.add("is-dragging");
+    document.addEventListener("pointermove", onMove, { passive: false });
+    document.addEventListener("pointerup", finish);
+    document.addEventListener("pointercancel", finish);
+    scrollTimer = requestAnimationFrame(autoScroll);
   });
+
+  return handle;
 }
 
 // --- Форма: ингредиенты ---
 
 function addIngredientRow(ing = { product: "", amount: "", unit: "г" }) {
   const tr = document.createElement("tr");
+  // Процент отходов, поправленный в калькуляторе выхода, в форме не виден,
+  // но должен пережить сохранение рецепта.
+  if (ing.waste !== undefined && ing.waste !== null) tr.dataset.waste = ing.waste;
 
   const productInput = document.createElement("input");
   productInput.type = "text";
@@ -538,13 +583,18 @@ function addIngredientRow(ing = { product: "", amount: "", unit: "г" }) {
   productInput.required = true;
 
   const amountInput = document.createElement("input");
-  amountInput.type = "number";
-  amountInput.step = "any";
-  amountInput.min = "0";
+  // Текстовое поле, а не числовое: иначе не ввести «1/2» или «½».
+  amountInput.type = "text";
+  amountInput.autocomplete = "off";
   amountInput.className = "ing-amount";
-  amountInput.placeholder = "Кол-во";
-  amountInput.value = ing.amount;
+  amountInput.placeholder = "1/2, 1,5…";
+  amountInput.value = ing.amount === "" || ing.amount === undefined ? "" : formatAmount(Number(ing.amount) || 0, false);
   amountInput.required = true;
+  amountInput.addEventListener("input", () => {
+    const bad = amountInput.value.trim() !== "" && isNaN(parseAmount(amountInput.value));
+    amountInput.setCustomValidity(bad ? "Число или дробь: 2, 1,5, 1/2, 1 1/2" : "");
+    amountInput.classList.toggle("unknown-product", bad);
+  });
 
   const unitSelect = document.createElement("select");
   unitSelect.className = "ing-unit";
@@ -554,10 +604,7 @@ function addIngredientRow(ing = { product: "", amount: "", unit: "г" }) {
   removeBtn.className = "btn-icon";
   removeBtn.textContent = "✕";
   removeBtn.title = "Удалить ингредиент";
-  removeBtn.addEventListener("click", () => {
-    tr.remove();
-    refreshMoveButtons(el("formIngredients"));
-  });
+  removeBtn.addEventListener("click", () => tr.remove());
 
   // Список единиц зависит от продукта: у яйца есть «шт», у молока — «стакан».
   function refreshUnits(preferred) {
@@ -581,26 +628,26 @@ function addIngredientRow(ing = { product: "", amount: "", unit: "г" }) {
   productInput.addEventListener("input", () => refreshUnits());
   refreshUnits(ing.unit);
 
-  const actions = document.createElement("span");
-  actions.className = "row-actions";
-  actions.append(moveButtons(tr, "ингредиент", () => refreshMoveButtons(el("formIngredients"))), removeBtn);
-
-  [productInput, amountInput, unitSelect, actions].forEach(node => {
+  [dragHandle(tr, "ингредиент"), productInput, amountInput, unitSelect, removeBtn].forEach(node => {
     const td = document.createElement("td");
     td.appendChild(node);
     tr.appendChild(td);
   });
+  tr.firstChild.className = "drag-cell";
 
   el("formIngredients").appendChild(tr);
-  refreshMoveButtons(el("formIngredients"));
 }
 
 function collectIngredients() {
-  return [...el("formIngredients").querySelectorAll("tr")].map(tr => ({
-    product: tr.querySelector(".ing-product").value.trim(),
-    amount: Number(tr.querySelector(".ing-amount").value) || 0,
-    unit: tr.querySelector(".ing-unit").value
-  })).filter(i => i.product);
+  return [...el("formIngredients").querySelectorAll("tr")].map(tr => {
+    const ing = {
+      product: tr.querySelector(".ing-product").value.trim(),
+      amount: parseAmount(tr.querySelector(".ing-amount").value) || 0,
+      unit: tr.querySelector(".ing-unit").value
+    };
+    if (tr.dataset.waste !== undefined) ing.waste = Number(tr.dataset.waste);
+    return ing;
+  }).filter(i => i.product);
 }
 
 // --- Форма: шаги ---
@@ -625,11 +672,11 @@ function addStepRow(step = { text: "", image: "" }) {
     renumberSteps();
   });
 
-  const actions = document.createElement("span");
-  actions.className = "row-actions";
-  actions.append(moveButtons(row, "шаг", renumberSteps), removeBtn);
+  const title = document.createElement("span");
+  title.className = "step-title";
+  title.append(dragHandle(row, "шаг", renumberSteps), num);
 
-  header.append(num, actions);
+  header.append(title, removeBtn);
 
   const textarea = document.createElement("textarea");
   textarea.className = "step-text";
@@ -684,7 +731,6 @@ function renumberSteps() {
   el("formSteps").querySelectorAll(".step-number").forEach((node, i) => {
     node.textContent = `Шаг ${i + 1}`;
   });
-  refreshMoveButtons(el("formSteps"));
 }
 
 function collectSteps() {

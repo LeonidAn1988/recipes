@@ -151,6 +151,7 @@ function init() {
   });
 
   initRecipesUi();
+  initYieldUi();
   initProductsUi();
   initMenuUi();
 

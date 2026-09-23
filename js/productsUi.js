@@ -143,6 +143,7 @@ function openProductModal(product) {
     el("productFat").value = product.fat;
     el("productCarbs").value = product.carbs;
     el("productKcal").value = product.kcal;
+    el("productWaste").value = product.waste || "";
     el("productGi").value = product.gi ?? "";
     el("productNoGi").checked = product.gi === null || product.gi === undefined;
     Object.entries(product.units || {}).forEach(([unit, grams]) => addUnitRow(unit, grams));
@@ -257,6 +258,8 @@ function handleProductSubmit(e) {
     gi: el("productNoGi").checked ? null : (el("productGi").value === "" ? null : Number(el("productGi").value)),
     units
   };
+  const waste = clampWaste(el("productWaste").value);
+  if (waste > 0) product.waste = waste;
 
   // Переименование ломает связь с рецептами — предлагаем обновить их разом.
   if (originalName && originalName !== name) {

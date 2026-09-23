@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Рецепты">
 <title>Рецепты — книга рецептов</title>
-<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/style.css?v=20260923173119">
 </head>
 <body>
 
@@ -108,6 +108,55 @@
               <li>Значения ориентировочные: реальный отклик зависит от сорта, обработки и сочетания продуктов — жиры и белки в блюде замедляют усвоение углеводов.</li>
             </ul>
           </details>
+        </section>
+
+        <section class="detail-section yield-section" id="yieldSection">
+          <h3>Пересчёт под мои продукты</h3>
+          <p class="hint">В рецепте указан чистый вес — после очистки. Скажите, сколько продукта у вас есть: посчитаю, сколько останется после очистки и сколько нужно всего остального.</p>
+
+          <div class="yield-controls">
+            <label>Считать от
+              <select id="yieldBase" class="select-input"></select>
+            </label>
+
+            <label>У меня есть
+              <span class="yield-amount">
+                <input type="number" id="yieldAmount" min="0" step="any" inputmode="decimal" placeholder="например, 2">
+                <select id="yieldUnit" class="select-input">
+                  <option value="1000">кг</option>
+                  <option value="1">г</option>
+                </select>
+                <span id="yieldUnitServings" class="yield-unit-text hidden">порций</span>
+              </span>
+            </label>
+          </div>
+
+          <div class="yield-dirty" id="yieldDirtyWrap">
+            <label class="checkbox-label"><input type="radio" name="yieldState" value="gross" checked> вес до очистки</label>
+            <label class="checkbox-label"><input type="radio" name="yieldState" value="net"> уже очищено</label>
+            <label class="yield-waste">отходы
+              <input type="number" id="yieldWaste" min="0" max="95" step="any" inputmode="decimal"> %
+            </label>
+          </div>
+
+          <div id="yieldResult" class="hidden">
+            <p class="yield-summary" id="yieldSummary"></p>
+            <div class="table-scroll">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Продукт</th>
+                    <th class="num">Чистый вес</th>
+                    <th class="num">Отходы</th>
+                    <th class="num">Взять до очистки</th>
+                  </tr>
+                </thead>
+                <tbody id="yieldTable"></tbody>
+              </table>
+            </div>
+            <p class="hint">Процент отходов можно поправить в таблице под свой продукт и разделку — он запомнится в этом рецепте.</p>
+            <button type="button" id="yieldToMenuBtn" class="btn btn-secondary btn-small"></button>
+          </div>
         </section>
 
         <section class="detail-section">
@@ -301,6 +350,7 @@
           <table class="form-table">
             <thead>
               <tr>
+                <th class="drag-cell"></th>
                 <th>Название</th>
                 <th class="col-amount">Кол-во</th>
                 <th class="col-unit">Ед. изм.</th>
@@ -342,6 +392,10 @@
 
       <label>Категория
         <input type="text" id="productCategory" list="productCategoriesList" required>
+      </label>
+
+      <label>Отходы при очистке, %
+        <input type="number" id="productWaste" step="any" min="0" max="95" inputmode="decimal" placeholder="0 — продукт идёт в блюдо целиком">
       </label>
 
       <fieldset class="form-block">
@@ -430,14 +484,15 @@
 <datalist id="productCategoriesList"></datalist>
 <datalist id="recipeCategoriesList"></datalist>
 
-<script src="js/products.js"></script>
-<script src="js/store.js"></script>
-<script src="js/sync.js"></script>
-<script src="js/nutrition.js"></script>
-<script src="js/recipes.js"></script>
-<script src="js/app.js"></script>
-<script src="js/recipesUi.js"></script>
-<script src="js/productsUi.js"></script>
-<script src="js/menuUi.js"></script>
+<script src="js/products.js?v=20260923173119"></script>
+<script src="js/store.js?v=20260923173119"></script>
+<script src="js/sync.js?v=20260923173119"></script>
+<script src="js/nutrition.js?v=20260923173119"></script>
+<script src="js/recipes.js?v=20260923173119"></script>
+<script src="js/app.js?v=20260923173119"></script>
+<script src="js/recipesUi.js?v=20260923173119"></script>
+<script src="js/yieldUi.js?v=20260923173119"></script>
+<script src="js/productsUi.js?v=20260923173119"></script>
+<script src="js/menuUi.js?v=20260923173119"></script>
 </body>
 </html>

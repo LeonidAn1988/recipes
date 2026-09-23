@@ -96,15 +96,22 @@ function calcMenu() {
 
     (recipe.ingredients || []).forEach((ing, i) => {
       const key = ing.product;
+      const product = findProduct(key);
       const entry = shopping.get(key) || {
         name: key,
-        product: findProduct(key),
+        product,
         grams: 0,
+        netGrams: 0,
         byTaste: false
       };
+      // Покупать нужно с запасом на очистку: в рецепте чистый вес.
       const grams = rows[i].grams * factor;
-      if (grams > 0) entry.grams += grams;
-      else entry.byTaste = true;
+      if (grams > 0) {
+        entry.netGrams += grams;
+        entry.grams += grossFromNet(grams, ingredientWaste(ing, product));
+      } else {
+        entry.byTaste = true;
+      }
       shopping.set(key, entry);
     });
 
@@ -284,6 +291,10 @@ function renderShoppingList(shopping) {
         amount.textContent = entry.grams > 0
           ? formatQuantity(entry.product, entry.grams)
           : "по вкусу";
+        if (entry.grams - entry.netGrams > 0.5) {
+          amount.title = `С запасом на очистку. Чистого веса нужно ${formatQuantity(entry.product, entry.netGrams)}.`;
+          amount.textContent += " *";
+        }
 
         label.append(checkbox, name, amount);
         li.appendChild(label);
@@ -299,4 +310,7 @@ function renderShoppingList(shopping) {
     ? `${unknown} ${plural(unknown, "позиции нет", "позиций нет", "позиций нет")} в базе продуктов — ` +
       "их количество посчитано по общим нормам единиц, а БЖУ в итогах не учтены."
     : "Количества суммированы по всем блюдам меню и пересчитаны под указанное число порций.";
+  if (shopping.some(e => e.grams - e.netGrams > 0.5)) {
+    el("shoppingHint").textContent += " * — вес до очистки: с запасом на отходы (картофель, морковь, рыба и т. п.).";
+  }
 }
