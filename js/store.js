@@ -70,10 +70,23 @@ function loadRecipes() {
     return structuredClone(DEFAULT_RECIPES);
   }
 
+  // Теги появились позже рецептов: стартовым рецептам без тегов проставляем
+  // их из стартового набора. Пустой массив — осознанно снятые теги, не трогаем.
+  let tagsAdded = false;
+  stored.forEach(r => {
+    if (r.tags === undefined && STARTER_TAGS[r.id]) {
+      r.tags = [...STARTER_TAGS[r.id]];
+      tagsAdded = true;
+    }
+  });
+
   const seeded = new Set(readJson(STORAGE_KEYS.seeded, []));
   const existing = new Set(stored.map(r => r.id));
   const fresh = DEFAULT_RECIPES.filter(r => !seeded.has(r.id) && !existing.has(r.id));
-  if (fresh.length === 0) return stored;
+  if (fresh.length === 0) {
+    if (tagsAdded) writeJson(STORAGE_KEYS.recipes, stored);
+    return stored;
+  }
 
   const merged = [...stored, ...structuredClone(fresh)];
   writeJson(STORAGE_KEYS.seeded, [...seeded, ...fresh.map(r => r.id)]);

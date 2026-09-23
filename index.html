@@ -36,9 +36,10 @@
     <aside class="sidebar">
       <button id="addRecipeBtn" class="btn btn-primary btn-block">+ Новый рецепт</button>
 
-      <input type="search" id="searchInput" placeholder="Поиск по названию и ингредиентам" class="search-input">
+      <input type="search" id="searchInput" placeholder="Блюдо, продукт или #тег" class="search-input">
 
       <div class="category-filters" id="categoryFilters"></div>
+      <div class="tag-filters hidden" id="tagFilters"></div>
 
       <ul id="recipeList" class="recipe-list"></ul>
       <p class="list-empty hidden" id="recipeListEmpty">Ничего не найдено.</p>
@@ -67,6 +68,7 @@
           <span id="detailTime" class="badge"></span>
           <span id="detailServings" class="badge"></span>
         </div>
+        <div class="detail-tags hidden" id="detailTags"></div>
 
         <section class="detail-section">
           <h3>Пищевая ценность</h3>
@@ -254,6 +256,11 @@
       <label>Категория
         <input type="text" id="formCategory" list="recipeCategoriesList" placeholder="например, Десерты" required>
       </label>
+
+      <label>Теги
+        <input type="text" id="formTags" placeholder="через запятую: быстро, сладкое, на пару" autocomplete="off">
+      </label>
+      <div class="tag-suggest" id="formTagSuggest"></div>
 
       <div class="form-row">
         <label>Время приготовления

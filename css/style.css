@@ -905,3 +905,27 @@ body {
 }
 .sync-steps li { margin-bottom: 0.4rem; }
 .sync-steps a { color: var(--accent); font-weight: 600; }
+
+.tag-filters,
+.detail-tags,
+.tag-suggest {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.tag-filters {
+  margin: -0.4rem 0 1rem;
+  padding-top: 0.6rem;
+  border-top: 1px dashed var(--border);
+}
+.tag-filters.hidden,
+.detail-tags.hidden { display: none; }
+.detail-tags { margin: -0.6rem 0 1.5rem; }
+.tag-suggest { margin: -0.5rem 0 0.9rem; }
+.chip-tag { font-size: 0.75rem; padding: 0.2rem 0.6rem; }
+.chip-reset {
+  font-size: 0.75rem;
+  padding: 0.2rem 0.6rem;
+  background: transparent;
+  border-style: dashed;
+}

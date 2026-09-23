@@ -2,6 +2,7 @@
 // с расчётом БЖУ/ГИ и форма добавления-редактирования.
 
 let activeCategory = "all";
+let activeTags = new Set();
 let searchQuery = "";
 
 function initRecipesUi() {
@@ -15,6 +16,7 @@ function initRecipesUi() {
   el("addStepBtn").addEventListener("click", () => addStepRow());
   el("cancelModalBtn").addEventListener("click", closeRecipeModal);
   el("formImage").addEventListener("input", syncImagePreview);
+  el("formTags").addEventListener("input", renderTagSuggest);
   el("printRecipeBtn").addEventListener("click", () => window.print());
   el("addToMenuBtn").addEventListener("click", () => {
     if (selectedId) addRecipeToMenu(selectedId);
@@ -56,15 +58,73 @@ function getCategories() {
   return [...new Set(recipes.map(r => r.category))].sort((a, b) => a.localeCompare(b, "ru"));
 }
 
-// Ищет по названию и по составу: «что приготовить из кабачков» — частый вопрос.
+// Все теги книги с числом рецептов, самые частые — первыми.
+function getAllTags() {
+  const counts = new Map();
+  recipes.forEach(r => (r.tags || []).forEach(t => counts.set(t, (counts.get(t) || 0) + 1)));
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "ru"))
+    .map(([tag, count]) => ({ tag, count }));
+}
+
+// Разбирает строку «быстро, На пару,,сладкое» в чистый список без повторов.
+function parseTags(text) {
+  const seen = new Set();
+  return text.split(",")
+    .map(t => t.trim().toLowerCase().replace(/^#/, ""))
+    .filter(t => t && !seen.has(t) && seen.add(t));
+}
+
+// Ищет по названию, составу и тегам: «что приготовить из кабачков» — частый вопрос.
+// Выбранные теги сужают список: рецепт должен иметь их все.
 function getFilteredRecipes() {
-  const q = searchQuery.trim().toLowerCase();
+  const q = searchQuery.trim().toLowerCase().replace(/^#/, "");
   return recipes.filter(r => {
     if (activeCategory !== "all" && r.category !== activeCategory) return false;
+    const tags = r.tags || [];
+    if ([...activeTags].some(t => !tags.includes(t))) return false;
     if (!q) return true;
     if (r.title.toLowerCase().includes(q)) return true;
+    if (tags.some(t => t.includes(q))) return true;
     return (r.ingredients || []).some(i => i.product.toLowerCase().includes(q));
   });
+}
+
+function toggleTagFilter(tag) {
+  if (activeTags.has(tag)) activeTags.delete(tag);
+  else activeTags.add(tag);
+  renderRecipesView();
+}
+
+function renderTagFilters() {
+  const wrap = el("tagFilters");
+  wrap.innerHTML = "";
+  const all = getAllTags();
+  // Тег, который сняли со всех рецептов, не должен оставаться в фильтре.
+  activeTags.forEach(t => { if (!all.some(x => x.tag === t)) activeTags.delete(t); });
+  wrap.classList.toggle("hidden", all.length === 0);
+
+  all.forEach(({ tag, count }) => {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "chip chip-tag" + (activeTags.has(tag) ? " active" : "");
+    chip.textContent = "#" + tag;
+    chip.title = `${recipeWord(count)} с тегом «${tag}»`;
+    chip.addEventListener("click", () => toggleTagFilter(tag));
+    wrap.appendChild(chip);
+  });
+
+  if (activeTags.size > 0) {
+    const reset = document.createElement("button");
+    reset.type = "button";
+    reset.className = "chip chip-reset";
+    reset.textContent = "Сбросить теги";
+    reset.addEventListener("click", () => {
+      activeTags.clear();
+      renderRecipesView();
+    });
+    wrap.appendChild(reset);
+  }
 }
 
 function renderCategoryFilters() {
@@ -317,6 +377,8 @@ function renderDetail() {
   timeEl.textContent = recipe.time || "";
   timeEl.classList.toggle("hidden", !recipe.time);
 
+  renderDetailTags(recipe);
+
   const servingsEl = el("detailServings");
   servingsEl.textContent = recipe.servings || "";
   servingsEl.classList.toggle("hidden", !recipe.servings);
@@ -336,8 +398,26 @@ function renderDetail() {
   renderVideo(recipe);
 }
 
+// Теги в карточке кликабельны: нажатие показывает все рецепты с этим тегом.
+function renderDetailTags(recipe) {
+  const wrap = el("detailTags");
+  wrap.innerHTML = "";
+  const tags = recipe.tags || [];
+  wrap.classList.toggle("hidden", tags.length === 0);
+  tags.forEach(tag => {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "chip chip-tag" + (activeTags.has(tag) ? " active" : "");
+    chip.textContent = "#" + tag;
+    chip.title = "Показать все рецепты с этим тегом";
+    chip.addEventListener("click", () => toggleTagFilter(tag));
+    wrap.appendChild(chip);
+  });
+}
+
 function renderRecipesView() {
   renderCategoryFilters();
+  renderTagFilters();
   renderRecipeList();
   renderDetail();
 }
@@ -511,6 +591,7 @@ function openRecipeModal(recipe) {
     el("recipeId").value = recipe.id;
     el("formTitle").value = recipe.title;
     el("formCategory").value = recipe.category;
+    el("formTags").value = (recipe.tags || []).join(", ");
     el("formTime").value = recipe.time || "";
     el("formServings").value = recipe.servings || "";
     el("formImage").value = recipe.image || "";
@@ -526,6 +607,7 @@ function openRecipeModal(recipe) {
   }
 
   syncImagePreview();
+  renderTagSuggest();
   el("recipeModal").classList.remove("hidden");
 }
 
@@ -540,6 +622,27 @@ function syncImagePreview() {
   }
 }
 
+// Под полем тегов — уже используемые теги: нажатие добавляет или убирает тег,
+// чтобы не плодить «на пару» и «напару».
+function renderTagSuggest() {
+  const wrap = el("formTagSuggest");
+  wrap.innerHTML = "";
+  const current = parseTags(el("formTags").value);
+  getAllTags().forEach(({ tag }) => {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "chip chip-tag" + (current.includes(tag) ? " active" : "");
+    chip.textContent = "#" + tag;
+    chip.addEventListener("click", () => {
+      const list = parseTags(el("formTags").value);
+      const next = list.includes(tag) ? list.filter(t => t !== tag) : [...list, tag];
+      el("formTags").value = next.join(", ");
+      renderTagSuggest();
+    });
+    wrap.appendChild(chip);
+  });
+}
+
 function closeRecipeModal() {
   el("recipeModal").classList.add("hidden");
 }
@@ -551,6 +654,7 @@ function handleRecipeSubmit(e) {
   const data = {
     title: el("formTitle").value.trim(),
     category: el("formCategory").value.trim(),
+    tags: parseTags(el("formTags").value),
     time: el("formTime").value.trim(),
     servings: el("formServings").value.trim(),
     image: el("formImage").value.trim(),
