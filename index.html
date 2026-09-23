@@ -7,7 +7,20 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Рецепты">
 <title>Рецепты — книга рецептов</title>
-<link rel="stylesheet" href="css/style.css?v=20260924000206">
+<script>
+  // Тема до первой отрисовки, чтобы страница не мигала. Полная логика — js/themes.js.
+  (function () {
+    var fonts = { notebook: "Neucha", oldbook: "PT+Serif:ital,wght@0,400;0,700;1,400", scandi: "Manrope:wght@400;600;800" };
+    var t = null;
+    try { t = localStorage.getItem("recipes.theme"); } catch (e) {}
+    if (!fonts[t]) return;
+    document.documentElement.setAttribute("data-theme", t);
+    document.write('<link id="font-' + t + '" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=' + fonts[t] + '&display=swap">');
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="css/style.css?v=20260924000713">
 </head>
 <body>
 
@@ -547,21 +560,22 @@
 <datalist id="productCategoriesList"></datalist>
 <datalist id="recipeCategoriesList"></datalist>
 
-<script src="js/products.js?v=20260924000206"></script>
-<script src="js/store.js?v=20260924000206"></script>
-<script src="js/profiles.js?v=20260924000206"></script>
-<script src="js/sync.js?v=20260924000206"></script>
-<script src="js/nutrition.js?v=20260924000206"></script>
-<script src="js/recipes.js?v=20260924000206"></script>
-<script src="js/app.js?v=20260924000206"></script>
-<script src="js/recipesUi.js?v=20260924000206"></script>
-<script src="js/yieldUi.js?v=20260924000206"></script>
-<script src="js/productsUi.js?v=20260924000206"></script>
-<script src="js/tinctureCalc.js?v=20260924000206"></script>
-<script src="js/tinctureUi.js?v=20260924000206"></script>
-<script src="js/canningData.js?v=20260924000206"></script>
-<script src="js/canningCalc.js?v=20260924000206"></script>
-<script src="js/canningUi.js?v=20260924000206"></script>
-<script src="js/menuUi.js?v=20260924000206"></script>
+<script src="js/products.js?v=20260924000713"></script>
+<script src="js/store.js?v=20260924000713"></script>
+<script src="js/themes.js?v=20260924000713"></script>
+<script src="js/profiles.js?v=20260924000713"></script>
+<script src="js/sync.js?v=20260924000713"></script>
+<script src="js/nutrition.js?v=20260924000713"></script>
+<script src="js/recipes.js?v=20260924000713"></script>
+<script src="js/app.js?v=20260924000713"></script>
+<script src="js/recipesUi.js?v=20260924000713"></script>
+<script src="js/yieldUi.js?v=20260924000713"></script>
+<script src="js/productsUi.js?v=20260924000713"></script>
+<script src="js/tinctureCalc.js?v=20260924000713"></script>
+<script src="js/tinctureUi.js?v=20260924000713"></script>
+<script src="js/canningData.js?v=20260924000713"></script>
+<script src="js/canningCalc.js?v=20260924000713"></script>
+<script src="js/canningUi.js?v=20260924000713"></script>
+<script src="js/menuUi.js?v=20260924000713"></script>
 </body>
 </html>

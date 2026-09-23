@@ -4,18 +4,26 @@
   --surface-alt: #f4efe7;
   --border: #e7ddd0;
   --text: #2e2620;
-  --text-muted: #8a7f70;
-  --accent: #c9622f;
-  --accent-hover: #b0521f;
+  --text-muted: #736859;
+  --accent: #b4541f;
+  --accent-hover: #9a4719;
+  --accent-ink: var(--accent);
   --danger: #c0392b;
   --protein: #3d7ea6;
   --fat: #d99b30;
   --carbs: #6a9a52;
-  --level-low: #4c9a4c;
-  --level-medium: #d99b30;
-  --level-high: #cc4b37;
+  --level-low: #2f7a33;
+  --level-medium: #9a6500;
+  --level-high: #b23a28;
   --radius: 10px;
   --shadow: 0 2px 8px rgba(0,0,0,0.06);
+  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-display: var(--font-body);
+  --header-bg: var(--surface);
+  --header-text: var(--text);
+  --header-muted: var(--text-muted);
+  --header-pill: var(--surface-alt);
+  --page-pattern: none;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -26,8 +34,11 @@
     --border: #3a3128;
     --text: #f1ece4;
     --text-muted: #a89a86;
-    --accent: #e2823f;
-    --accent-hover: #f0934f;
+    /* Заливка кнопок под белым текстом и цвет текста на тёмном фоне —
+       разные оттенки: одним оба контраста WCAG не закрыть. */
+    --accent: #b85a25;
+    --accent-hover: #c86a33;
+    --accent-ink: #e2823f;
     --danger: #e2564a;
     --protein: #6fb3d9;
     --fat: #edb75c;
@@ -43,9 +54,21 @@
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font-body);
   background: var(--bg);
+  background-image: var(--page-pattern);
   color: var(--text);
+}
+
+/* Заголовки — «голос» темы: рукописный, книжный или строгий шрифт.
+   Кнопки, подписи и цифры остаются в шрифте интерфейса. */
+.app-header h1,
+.detail-header h2,
+.page-head h2,
+.modal-content h2,
+.detail-section h3 {
+  font-family: var(--font-display);
+  text-wrap: balance;
 }
 
 /* ───────── Шапка и навигация ───────── */
@@ -56,7 +79,8 @@ body {
   gap: 1rem;
   flex-wrap: wrap;
   padding: 0.8rem 1.5rem;
-  background: var(--surface);
+  background: var(--header-bg);
+  color: var(--header-text);
   border-bottom: 1px solid var(--border);
 }
 
@@ -68,7 +92,7 @@ body {
 .app-nav {
   display: flex;
   gap: 0.25rem;
-  background: var(--surface-alt);
+  background: var(--header-pill);
   border-radius: 999px;
   padding: 0.2rem;
 }
@@ -76,7 +100,7 @@ body {
 .nav-btn {
   border: none;
   background: transparent;
-  color: var(--text-muted);
+  color: var(--header-muted);
   font-size: 0.88rem;
   font-family: inherit;
   padding: 0.4rem 0.9rem;
@@ -84,7 +108,7 @@ body {
   cursor: pointer;
 }
 
-.nav-btn:hover { color: var(--text); }
+.nav-btn:hover { color: var(--header-text); }
 
 .nav-btn.active {
   background: var(--accent);
@@ -268,12 +292,15 @@ body {
 
 .detail-header {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 0.5rem 1rem;
 }
 
-.detail-header h2 { margin: 0 0 0.5rem; }
+/* Название не должно зажиматься кнопками до слова в строке:
+   если места мало, кнопки уходят на следующую строку. */
+.detail-header h2 { margin: 0 0 0.5rem; flex: 1 1 16rem; min-width: 0; }
 
 .detail-actions {
   display: flex;
@@ -310,7 +337,7 @@ body {
 
 .detail-section h3 {
   margin-bottom: 0.75rem;
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 
 /* ───────── Пищевая ценность ───────── */
@@ -543,7 +570,7 @@ body {
   border: none;
   padding: 0;
   font: inherit;
-  color: var(--accent);
+  color: var(--accent-ink);
   cursor: pointer;
   text-align: left;
 }
@@ -746,7 +773,7 @@ body {
 
 .form-block legend {
   font-size: 0.82rem;
-  color: var(--accent);
+  color: var(--accent-ink);
   font-weight: 600;
   padding: 0 0.4rem;
 }
@@ -913,7 +940,7 @@ body {
   line-height: 1.5;
 }
 .sync-steps li { margin-bottom: 0.4rem; }
-.sync-steps a { color: var(--accent); font-weight: 600; }
+.sync-steps a { color: var(--accent-ink); font-weight: 600; }
 
 .tag-filters,
 .detail-tags,
@@ -1060,7 +1087,7 @@ body {
   -webkit-user-select: none;
   border-radius: 6px;
 }
-.drag-handle:hover { color: var(--accent); background: var(--surface-alt); }
+.drag-handle:hover { color: var(--accent-ink); background: var(--surface-alt); }
 body.is-dragging,
 body.is-dragging * { cursor: grabbing !important; user-select: none; -webkit-user-select: none; }
 .dragging {
@@ -1163,3 +1190,134 @@ body.is-dragging * { cursor: grabbing !important; user-select: none; -webkit-use
 }
 #settingsBtn { font-size: 1.05rem; line-height: 1; padding-left: 0.6rem; padding-right: 0.6rem; }
 .placeholder-page { color: var(--text-muted); padding: 2rem 0; }
+
+/* ═════════════════ Темы оформления ═════════════════
+   «Современная кухня» — токены :root выше (светлая и тёмная по системе).
+   Остальные темы светлые: селектор html[data-theme] сильнее :root в
+   @media (prefers-color-scheme: dark), поэтому перекрывает тёмную схему. */
+
+/* Бабушкина тетрадь: школьная тетрадь в клетку, чернила, рукописные заголовки. */
+html[data-theme="notebook"] {
+  --bg: #f8fafd;
+  --surface: #ffffff;
+  --surface-alt: #edf1f8;
+  --border: #cbd5e6;
+  --text: #1d2842;
+  --text-muted: #4f5b74;
+  --accent: #2c52a0;
+  --accent-hover: #21417f;
+  --accent-ink: var(--accent);
+  --danger: #b3261e;
+  --radius: 6px;
+  --shadow: 0 1px 3px rgba(29, 40, 66, 0.10);
+  --font-display: "Neucha", "Comic Sans MS", cursive;
+  --header-bg: #ffffff;
+  --header-pill: #edf1f8;
+  --page-pattern:
+    linear-gradient(rgba(44, 82, 160, 0.09) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(44, 82, 160, 0.09) 1px, transparent 1px);
+  color-scheme: light;
+}
+html[data-theme="notebook"] body { background-size: 22px 22px; background-attachment: fixed; }
+html[data-theme="notebook"] .content {
+  /* Красная линия поля, как в тетради. */
+  background: linear-gradient(90deg, transparent 1.1rem, rgba(210, 70, 70, 0.45) 1.1rem, rgba(210, 70, 70, 0.45) calc(1.1rem + 1px), transparent calc(1.1rem + 1px));
+}
+html[data-theme="notebook"] .app-header h1,
+html[data-theme="notebook"] .detail-header h2,
+html[data-theme="notebook"] .page-head h2 { font-size: 1.65rem; font-weight: 400; color: var(--accent-ink); }
+html[data-theme="notebook"] .detail-section h3,
+html[data-theme="notebook"] .modal-content h2 { font-weight: 400; font-size: 1.35rem; }
+
+/* Старая поваренная книга: чёрно-красная печать, антиква, типографские линейки. */
+html[data-theme="oldbook"] {
+  --bg: #efe7d7;
+  --surface: #faf6ee;
+  --surface-alt: #e8dcc6;
+  --border: #c9b594;
+  --text: #2a1c12;
+  --text-muted: #5f4a36;
+  --accent: #8b1d1d;
+  --accent-hover: #6e1515;
+  --accent-ink: var(--accent);
+  --danger: #8b1d1d;
+  --radius: 2px;
+  --shadow: 0 1px 0 rgba(42, 28, 18, 0.12);
+  --font-body: "PT Serif", Georgia, "Times New Roman", serif;
+  --font-display: "PT Serif", Georgia, serif;
+  --header-bg: #7a1919;
+  --header-text: #fbf3e4;
+  --header-muted: #efd9c2;
+  --header-pill: rgba(0, 0, 0, 0.22);
+  --page-pattern: radial-gradient(rgba(95, 74, 54, 0.05) 1px, transparent 1px);
+  color-scheme: light;
+}
+html[data-theme="oldbook"] body { background-size: 5px 5px; }
+html[data-theme="oldbook"] .app-header { border-bottom: 3px double #4a0f0f; }
+html[data-theme="oldbook"] .nav-btn.active { background: #fbf3e4; color: #7a1919; }
+html[data-theme="oldbook"] .app-header .btn-secondary { background: transparent; color: #fbf3e4; border-color: rgba(251, 243, 228, 0.55); }
+html[data-theme="oldbook"] .detail-header h2,
+html[data-theme="oldbook"] .page-head h2 {
+  font-variant: small-caps;
+  letter-spacing: 0.03em;
+  padding-bottom: 0.35rem;
+  border-bottom: 3px double var(--border);
+}
+html[data-theme="oldbook"] .detail-section h3 { color: var(--accent-ink); font-variant: small-caps; letter-spacing: 0.04em; }
+
+/* Скандинавский минимализм: воздух, берёза, хвойно-зелёный акцент, гротеск. */
+html[data-theme="scandi"] {
+  --bg: #fafaf8;
+  --surface: #ffffff;
+  --surface-alt: #f0ede6;
+  --border: #e3dfd6;
+  --text: #20262b;
+  --text-muted: #58616a;
+  --accent: #3f6b55;
+  --accent-hover: #325745;
+  --accent-ink: var(--accent);
+  --danger: #b0413e;
+  --radius: 14px;
+  --shadow: 0 6px 24px rgba(32, 38, 43, 0.06);
+  --font-body: "Manrope", -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Manrope", -apple-system, sans-serif;
+  --header-bg: #f3efe7;
+  --header-pill: #e7e1d6;
+  color-scheme: light;
+}
+html[data-theme="scandi"] .app-header { border-bottom-color: #e3dfd6; }
+html[data-theme="scandi"] .app-header h1,
+html[data-theme="scandi"] .detail-header h2,
+html[data-theme="scandi"] .page-head h2 { font-weight: 800; letter-spacing: -0.02em; }
+html[data-theme="scandi"] .content { padding-top: 2rem; }
+
+/* Выбор темы в настройках. */
+.theme-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.6rem; }
+.theme-option {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 150ms ease-out, box-shadow 150ms ease-out;
+}
+.theme-option:hover { border-color: var(--accent); }
+.theme-option[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
+.theme-swatch { display: block; height: 44px; border-radius: 4px; border: 1px solid rgba(0, 0, 0, 0.08); }
+.theme-name { font-weight: 600; font-size: 0.88rem; }
+.theme-desc { font-size: 0.75rem; color: var(--text-muted); }
+@media (prefers-reduced-motion: reduce) { .theme-option { transition: none; } }
+
+html[data-theme="oldbook"] .chip,
+html[data-theme="oldbook"] .badge,
+html[data-theme="oldbook"] .btn { border-radius: 2px; }
+@media (max-width: 760px) {
+  /* В колонку flex-basis заголовка становится высотой — отключаем. */
+  .detail-header h2 { flex: none; width: 100%; }
+}
