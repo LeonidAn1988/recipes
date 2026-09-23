@@ -422,6 +422,43 @@ function renderRecipesView() {
   renderDetail();
 }
 
+// --- Форма: порядок строк ---
+
+// Кнопки ↑ ↓ для строки формы. На телефоне они надёжнее перетаскивания:
+// прокрутка длинной формы мешает тянуть строку пальцем. Порядок берётся
+// прямо из DOM при сохранении, поэтому достаточно переставить узел.
+function moveButtons(row, what, onMove) {
+  const wrap = document.createElement("span");
+  wrap.className = "move-btns";
+  [["↑", -1, "Выше"], ["↓", 1, "Ниже"]].forEach(([label, dir, hint]) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "btn-icon btn-move";
+    btn.textContent = label;
+    btn.title = `${hint}: переместить ${what}`;
+    btn.setAttribute("aria-label", btn.title);
+    btn.addEventListener("click", () => {
+      const sibling = dir < 0 ? row.previousElementSibling : row.nextElementSibling;
+      if (!sibling) return;
+      row.parentNode.insertBefore(row, dir < 0 ? sibling : sibling.nextElementSibling);
+      if (onMove) onMove();
+      btn.focus();
+    });
+    wrap.appendChild(btn);
+  });
+  return wrap;
+}
+
+// Крайние строки не двигаются дальше края — гасим у них лишнюю стрелку.
+function refreshMoveButtons(container) {
+  const rows = [...container.children];
+  rows.forEach((row, i) => {
+    const [up, down] = row.querySelectorAll(".btn-move");
+    if (up) up.disabled = i === 0;
+    if (down) down.disabled = i === rows.length - 1;
+  });
+}
+
 // --- Форма: ингредиенты ---
 
 function addIngredientRow(ing = { product: "", amount: "", unit: "г" }) {
@@ -440,6 +477,7 @@ function addIngredientRow(ing = { product: "", amount: "", unit: "г" }) {
   amountInput.step = "any";
   amountInput.min = "0";
   amountInput.className = "ing-amount";
+  amountInput.placeholder = "Кол-во";
   amountInput.value = ing.amount;
   amountInput.required = true;
 
@@ -451,7 +489,10 @@ function addIngredientRow(ing = { product: "", amount: "", unit: "г" }) {
   removeBtn.className = "btn-icon";
   removeBtn.textContent = "✕";
   removeBtn.title = "Удалить ингредиент";
-  removeBtn.addEventListener("click", () => tr.remove());
+  removeBtn.addEventListener("click", () => {
+    tr.remove();
+    refreshMoveButtons(el("formIngredients"));
+  });
 
   // Список единиц зависит от продукта: у яйца есть «шт», у молока — «стакан».
   function refreshUnits(preferred) {
@@ -475,13 +516,18 @@ function addIngredientRow(ing = { product: "", amount: "", unit: "г" }) {
   productInput.addEventListener("input", () => refreshUnits());
   refreshUnits(ing.unit);
 
-  [productInput, amountInput, unitSelect, removeBtn].forEach(node => {
+  const actions = document.createElement("span");
+  actions.className = "row-actions";
+  actions.append(moveButtons(tr, "ингредиент", () => refreshMoveButtons(el("formIngredients"))), removeBtn);
+
+  [productInput, amountInput, unitSelect, actions].forEach(node => {
     const td = document.createElement("td");
     td.appendChild(node);
     tr.appendChild(td);
   });
 
   el("formIngredients").appendChild(tr);
+  refreshMoveButtons(el("formIngredients"));
 }
 
 function collectIngredients() {
@@ -514,7 +560,11 @@ function addStepRow(step = { text: "", image: "" }) {
     renumberSteps();
   });
 
-  header.append(num, removeBtn);
+  const actions = document.createElement("span");
+  actions.className = "row-actions";
+  actions.append(moveButtons(row, "шаг", renumberSteps), removeBtn);
+
+  header.append(num, actions);
 
   const textarea = document.createElement("textarea");
   textarea.className = "step-text";
@@ -569,6 +619,7 @@ function renumberSteps() {
   el("formSteps").querySelectorAll(".step-number").forEach((node, i) => {
     node.textContent = `Шаг ${i + 1}`;
   });
+  refreshMoveButtons(el("formSteps"));
 }
 
 function collectSteps() {

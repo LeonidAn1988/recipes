@@ -929,3 +929,35 @@ body {
   background: transparent;
   border-style: dashed;
 }
+
+.row-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.1rem;
+  white-space: nowrap;
+}
+.move-btns { display: inline-flex; gap: 0.1rem; }
+.btn-move {
+  font-size: 1rem;
+  min-width: 2rem;
+  min-height: 2rem;
+}
+.btn-move:hover { color: var(--accent); }
+.btn-move:disabled { opacity: 0.25; cursor: default; background: transparent; }
+
+/* На телефоне строка ингредиента — в две линии: название на всю ширину,
+   под ним количество, единица и кнопки. В одну линию название сжимается
+   до пары букв. */
+@media (max-width: 760px) {
+  #recipeForm .form-table thead { display: none; }
+  #formIngredients tr {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 0.35rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+  #formIngredients tr:last-child { border-bottom: none; }
+  #formIngredients td { padding: 0; }
+  #formIngredients td:first-child { grid-column: 1 / -1; }
+}
