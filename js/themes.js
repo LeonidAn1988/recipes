@@ -37,6 +37,9 @@ function applyTheme(id) {
 
 function initThemes() {
   el("themeBlock").classList.remove("hidden");
+  // Тема выбранного члена семьи могла смениться на другом устройстве.
+  const me = typeof currentMember === "function" ? currentMember() : null;
+  if (me && me.theme && me.theme !== currentThemeId()) applyTheme(me.theme);
   const theme = THEMES.find(t => t.id === currentThemeId());
   loadThemeFont(theme);
 }
@@ -67,6 +70,7 @@ function renderThemeList() {
     btn.append(swatch, name, desc);
     btn.addEventListener("click", () => {
       applyTheme(t.id);
+      if (typeof saveMemberTheme === "function") saveMemberTheme(t.id);
       renderThemeList();
     });
     wrap.appendChild(btn);

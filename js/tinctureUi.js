@@ -12,6 +12,7 @@ const STAGE_LABELS = {
 };
 
 let openTinctureId = null;
+let tnOnlyMine = false;
 // Значения калькуляторов живут, пока открыта страница: раздел перерисовывается
 // целиком, и без этого ввод сбрасывался бы после каждого действия.
 const tnCalcValues = {
@@ -116,6 +117,9 @@ function renderTincturesView() {
   const today = todayIso();
   const bottles = [...data.bottles].sort((a, b) => (a.finished - b.finished) || b.startDate.localeCompare(a.startDate));
   const due = bottles.filter(b => bottleStage(b, today) === "strain-due");
+  if (!currentMember()) tnOnlyMine = false;
+  const mine = currentMemberId();
+  const shownRecipes = tnOnlyMine ? data.recipes.filter(r => r.createdBy === mine) : data.recipes;
 
   el("tincturesPage").innerHTML = `
     <div class="page-head">
@@ -135,8 +139,9 @@ function renderTincturesView() {
 
     <section class="tn-section">
       <h3>Рецепты настоек</h3>
-      ${data.recipes.length ? `<ul class="tn-recipes">${data.recipes.map(tinctureRecipeItem).join("")}</ul>`
-        : `<p class="hint">Своих рецептов пока нет. Добавьте первый — с основой, закладкой, сроками и шагами.</p>`}
+      <div class="chip-row section-filters" id="tnFilters"></div>
+      ${shownRecipes.length ? `<ul class="tn-recipes">${shownRecipes.map(tinctureRecipeItem).join("")}</ul>`
+        : `<p class="hint">${tnOnlyMine ? "Вы пока не добавили своих рецептов настоек." : "Своих рецептов пока нет. Добавьте первый — с основой, закладкой, сроками и шагами."}</p>`}
     </section>
 
     <section class="tn-section">
@@ -169,6 +174,10 @@ function renderTincturesView() {
       </div>
     </section>`;
 
+  el("tnFilters").appendChild(mineChip(tnOnlyMine, value => {
+    tnOnlyMine = value;
+    renderTincturesView();
+  }));
   updateDiluteCalc();
   updateMixCalc();
   mountVideos(el("tincturesPage"), id => data.recipes.find(r => r.id === id));
@@ -215,7 +224,7 @@ function bottleItem(b, today) {
 function tinctureRecipeItem(r) {
   const open = openTinctureId === r.id;
   const base = [r.base, r.baseAbv ? `${formatAmount(r.baseAbv)} %` : "", r.baseVolume ? `${formatAmount(r.baseVolume)} мл` : ""].filter(Boolean).join(", ");
-  const terms = `настаивать ${r.infuseDays || 0} дн.` + (r.restDays ? `, отдых ${r.restDays} дн.` : "");
+  const terms = [r.infuseDays ? `настаивать ${r.infuseDays} дн.` : "", r.restDays ? `отдых ${r.restDays} дн.` : ""].filter(Boolean).join(", ");
   const details = open ? `
     <div class="tn-details">
       ${(r.ingredients || []).length ? `<ul class="tn-ings">${r.ingredients.map(i =>
@@ -233,7 +242,7 @@ function tinctureRecipeItem(r) {
   return `<li class="tn-recipe${open ? " open" : ""}">
     <button type="button" class="tn-recipe-head" data-act="toggle-recipe" data-id="${r.id}" aria-expanded="${open}">
       <span class="tn-recipe-title">${esc(r.title)}</span>
-      <span class="tn-recipe-meta">${esc([base, terms].filter(Boolean).join(" · "))}</span>
+      <span class="tn-recipe-meta">${esc([base, terms, authorName(r.createdBy) ? "добавил(а): " + authorName(r.createdBy) : ""].filter(Boolean).join(" · "))}</span>
     </button>
     ${details}
   </li>`;
@@ -380,6 +389,10 @@ function saveTinctureRecipe(e) {
   const num = id => parseAmount(el(id).value) || 0;
   const recipe = {
     id: form.dataset.id || newId("tn"),
+    // Автор ставится только новой записи; у старых без автора он так и остаётся пустым.
+    createdBy: form.dataset.id
+      ? (loadSection("tinctures").recipes.find(r => r.id === form.dataset.id) || {}).createdBy || null
+      : currentMemberId(),
     title: el("tnTitle").value.trim(),
     base: el("tnBase").value.trim(),
     baseAbv: num("tnBaseAbv"),

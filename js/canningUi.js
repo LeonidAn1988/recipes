@@ -4,6 +4,7 @@
 // в автоклав, «партия» — всё, что законсервировано за один день.
 
 const SAFETY_OPEN_KEY = "recipes.canning.safetyOpen";
+let makerOnlyMine = false;
 
 function initCanningUi() {
   document.body.insertAdjacentHTML("beforeend", `
@@ -45,7 +46,7 @@ function initCanningUi() {
     const entry = { product: val("product"), jar: val("jar"), temp, minutes, note: val("note"), video: val("video") };
     const existing = modes.find(m => m.id === f.dataset.editId);
     if (existing) Object.assign(existing, entry);
-    else modes.push({ id: newId("mm"), ...entry });
+    else modes.push({ id: newId("mm"), createdBy: currentMemberId(), ...entry });
     saveCanningSettings({ makerModes: modes });
     f.reset();
     f.dataset.editId = "";
@@ -141,6 +142,7 @@ function renderCanningView() {
     <section class="tn-section" id="makerSection">
       <h3>Режимы из инструкции автоклава${s.model ? ` «${esc(s.model)}»` : ""}</h3>
       <p class="hint">Перепишите режимы из инструкции к вашему автоклаву — они будут под рукой у всей семьи. Это данные производителя: независимо их никто не проверял. Если в инструкции нет режима для продукта или банки — такой продукт в этом автоклаве не консервируйте.</p>
+      <div class="chip-row section-filters" id="makerFilters"></div>
       <div id="makerModes"></div>
       <form class="calc-card maker-form" id="makerForm">
         <div class="calc-fields">
@@ -182,11 +184,21 @@ function renderCanningView() {
 function renderMakerModes() {
   const box = el("makerModes");
   if (!box) return;
-  const modes = canningSettings().makerModes;
+  if (!currentMember()) makerOnlyMine = false;
+  const filters = el("makerFilters");
+  filters.innerHTML = "";
+  filters.appendChild(mineChip(makerOnlyMine, value => {
+    makerOnlyMine = value;
+    renderMakerModes();
+  }));
+  const mine = currentMemberId();
+  const all = canningSettings().makerModes;
+  const modes = makerOnlyMine ? all.filter(m => m.createdBy === mine) : all;
   box.innerHTML = modes.length ? `<ul class="bottle-list maker-list">${modes.map(m => `<li class="bottle">
       <div class="bottle-main">
         <span class="bottle-title">${esc(m.product)}</span>
         <span class="stage">по данным производителя</span>
+        ${authorName(m.createdBy) ? `<span class="stage">добавил(а): ${esc(authorName(m.createdBy))}</span>` : ""}
         <div class="bottle-facts">${esc(m.jar)} · <strong>${esc(formatAmount(m.temp))} °C</strong> · <strong>${esc(m.minutes)} мин</strong> выдержки${m.note ? " · " + esc(m.note) : ""}</div>
         ${m.video ? `<details class="maker-video"><summary>Видео</summary><div data-video-for="${m.id}"></div></details>` : ""}
       </div>
@@ -195,7 +207,7 @@ function renderMakerModes() {
         <button type="button" class="btn btn-secondary btn-small" data-act="edit-maker" data-id="${m.id}">Изменить</button>
         <button type="button" class="btn-icon" data-act="del-maker" data-id="${m.id}" aria-label="Удалить режим" title="Удалить режим">✕</button>
       </div>
-    </li>`).join("")}</ul>` : `<p class="hint">Пока режимов нет.</p>`;
+    </li>`).join("")}</ul>` : `<p class="hint">${makerOnlyMine ? "Вы пока не добавили своих режимов." : "Пока режимов нет."}</p>`;
   mountVideos(box, id => modes.find(m => m.id === id));
 }
 

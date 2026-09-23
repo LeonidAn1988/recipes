@@ -4,6 +4,7 @@
 let activeCategory = "all";
 let activeTags = new Set();
 let onlyFavorites = false;
+let onlyMine = false;
 let searchQuery = "";
 let kcalMin = null;
 let kcalMax = null;
@@ -107,11 +108,13 @@ function getFilteredRecipes() {
   const q = searchQuery.trim().toLowerCase().replace(/^#/, "");
   const byKcal = kcalMin !== null || kcalMax !== null;
   const favorites = favoriteIds();
+  const mine = currentMemberId();
   return recipes.filter(r => {
     if (activeCategory !== "all" && r.category !== activeCategory) return false;
     if (byKcal && !kcalInRange(r)) return false;
     const tags = r.tags || [];
     if (onlyFavorites && !favorites.has(r.id)) return false;
+    if (onlyMine && (!mine || r.createdBy !== mine)) return false;
     if ([...activeTags].some(t => !tags.includes(t))) return false;
     if (!q) return true;
     if (r.title.toLowerCase().includes(q)) return true;
@@ -210,7 +213,10 @@ function renderCategoryFilters() {
 
   // «★ Избранное» — личный список текущего члена семьи.
   const me = currentMember();
-  if (!me) onlyFavorites = false;
+  if (!me) {
+    onlyFavorites = false;
+    onlyMine = false;
+  }
   const fav = document.createElement("button");
   fav.type = "button";
   fav.className = "chip chip-fav" + (onlyFavorites ? " active" : "");
@@ -225,6 +231,10 @@ function renderCategoryFilters() {
     renderRecipesView();
   });
   wrap.appendChild(fav);
+  wrap.appendChild(mineChip(onlyMine, value => {
+    onlyMine = value;
+    renderRecipesView();
+  }));
   ["all", ...getCategories()].forEach(cat => {
     const chip = document.createElement("button");
     chip.type = "button";
@@ -569,6 +579,9 @@ function renderDetail() {
 
   renderDetailTags(recipe);
   el("detailMethod").textContent = methodLabel(recipe.method || "raw");
+  const author = authorName(recipe.createdBy);
+  el("detailAuthor").textContent = author ? "добавил(а): " + author : "";
+  el("detailAuthor").classList.toggle("hidden", !author);
 
   const servingsEl = el("detailServings");
   servingsEl.textContent = recipe.servings || "";
@@ -985,7 +998,7 @@ function handleRecipeSubmit(e) {
     recipes[idx] = { ...recipes[idx], ...data };
     selectedId = id;
   } else {
-    const newRecipe = { id: "r-" + Date.now(), ...data };
+    const newRecipe = { id: "r-" + Date.now(), createdBy: currentMemberId(), ...data };
     recipes.push(newRecipe);
     selectedId = newRecipe.id;
   }

@@ -21,6 +21,9 @@ function setCurrentMember(id) {
   if (id) localStorage.setItem(PROFILE_KEY, id);
   else localStorage.removeItem(PROFILE_KEY);
   updateProfileChip();
+  // У каждого члена семьи своё оформление — применяем его при выборе.
+  const member = id ? loadProfiles().members.find(m => m.id === id) : null;
+  if (member && member.theme && typeof applyTheme === "function") applyTheme(member.theme);
   if (id && pendingFavorite) {
     const recipeId = pendingFavorite;
     pendingFavorite = null;
@@ -55,6 +58,48 @@ function favoriteIds() {
 
 function isFavorite(recipeId) {
   return favoriteIds().has(recipeId);
+}
+
+// Запоминает тему за текущим членом семьи (синхронизируется вместе с книгой).
+function saveMemberTheme(themeId) {
+  const me = currentMember();
+  if (!me) return;
+  const data = loadProfiles();
+  const member = data.members.find(m => m.id === me.id);
+  if (!member || member.theme === themeId) return;
+  member.theme = themeId;
+  saveSection("profiles", data);
+}
+
+// Автор записи — id текущего члена семьи (или null, если «кто я» не выбран).
+function currentMemberId() {
+  const me = currentMember();
+  return me ? me.id : null;
+}
+
+function authorName(id) {
+  const m = id ? loadProfiles().members.find(x => x.id === id) : null;
+  return m ? m.name : "";
+}
+
+// Чип-переключатель «Мои» для разделов: без выбранного профиля предлагает
+// выбрать, кто вы. onToggle вызывается с новым значением.
+function mineChip(active, onToggle) {
+  const chip = document.createElement("button");
+  chip.type = "button";
+  chip.className = "chip chip-mine" + (active ? " active" : "");
+  chip.setAttribute("aria-pressed", String(active));
+  const me = currentMember();
+  chip.textContent = "👤 Мои";
+  chip.title = me ? `Только добавленные: ${me.name}` : "Выберите в настройках, кто вы";
+  chip.addEventListener("click", () => {
+    if (!currentMember()) {
+      openSettings("Чтобы видеть свои рецепты, выберите, кто вы, или добавьте своё имя.");
+      return;
+    }
+    onToggle(!active);
+  });
+  return chip;
 }
 
 // Без выбранного профиля отмечать нечего — сначала спрашиваем, кто это.

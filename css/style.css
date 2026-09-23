@@ -1530,3 +1530,5 @@ textarea { border-color: var(--input-border) !important; }
 .kcal-input { flex: 1 1 0; min-width: 0; width: auto; -moz-appearance: textfield; appearance: textfield; }
 .kcal-input::-webkit-outer-spin-button,
 .kcal-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.section-filters { margin-bottom: 0.6rem; }
+.chip-mine.active { background: var(--accent); border-color: var(--accent); color: #fff; }
