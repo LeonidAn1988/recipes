@@ -1773,3 +1773,28 @@ button.step-time {
 }
 button.step-time:hover { border-color: var(--accent-ink); color: var(--accent-ink); }
 .step-needs { font-size: 0.82rem; color: var(--text-muted); margin-top: 0.25rem; }
+
+/* ───────── Список покупок: отделы, отметки, кладовая, шаблоны ───────── */
+.section-head { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; flex-wrap: wrap; }
+.section-head h3 { margin: 0; }
+.shopping-group li { display: flex; align-items: center; gap: 0.3rem; }
+.shopping-group li label { flex: 1; min-width: 0; }
+.shopping-group li.bought .shopping-name,
+.shopping-group li.bought .shopping-amount { color: var(--text-muted); text-decoration: line-through; }
+.pantry-btn { font-size: 0.95rem; opacity: 0.75; }
+.pantry-btn:hover { opacity: 1; }
+.pantry { margin-top: 0.8rem; }
+.pantry summary { cursor: pointer; font-weight: 600; margin-bottom: 0.5rem; }
+.pantry.hidden { display: none; }
+.templates { margin-top: 1.6rem; }
+
+#memberNote {
+  width: 100%;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  resize: vertical;
+}

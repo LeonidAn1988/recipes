@@ -19,7 +19,7 @@ const SYNC_KEYS = {
 // Профиль устройства («кто я») и тема оформления — личные, в облако не идут.
 const SYNCED_KEYS = [
   STORAGE_KEYS.recipes, STORAGE_KEYS.products, STORAGE_KEYS.menu, STORAGE_KEYS.seeded,
-  STORAGE_KEYS.tinctures, STORAGE_KEYS.canning, STORAGE_KEYS.profiles
+  STORAGE_KEYS.tinctures, STORAGE_KEYS.canning, STORAGE_KEYS.profiles, STORAGE_KEYS.planner
 ];
 
 const GIST_FILE = "recipes-book.json";
@@ -247,6 +247,12 @@ function initSync() {
     if (document.visibilityState === "visible") pullFromCloud();
     else if (localStorage.getItem(SYNC_KEYS.dirty)) pushToCloud();
   });
+  // Пока открыт список покупок, раз в 45 секунд сверяемся с облаком: отметки
+  // «куплено» других членов семьи появляются почти сразу.
+  setInterval(() => {
+    if (syncConfigured() && document.visibilityState === "visible" && typeof activeView !== "undefined" &&
+        activeView === "menu" && !localStorage.getItem(SYNC_KEYS.dirty)) pullFromCloud();
+  }, 45000);
   window.addEventListener("online", () => {
     if (localStorage.getItem(SYNC_KEYS.dirty)) pushToCloud();
   });

@@ -71,6 +71,26 @@ function saveMemberTheme(themeId) {
   saveSection("profiles", data);
 }
 
+// Личные заметки к рецептам: у каждого члена семьи свои («детям без перца»).
+// Хранятся в профилях и синхронизируются, показываются только автору.
+function memberNote(recipeId) {
+  const me = currentMember();
+  if (!me) return "";
+  const notes = loadProfiles().notes || {};
+  return (notes[me.id] || {})[recipeId] || "";
+}
+
+function saveMemberNote(recipeId, text) {
+  const me = currentMember();
+  if (!me) return;
+  const data = loadProfiles();
+  data.notes = data.notes || {};
+  data.notes[me.id] = data.notes[me.id] || {};
+  if (text.trim()) data.notes[me.id][recipeId] = text;
+  else delete data.notes[me.id][recipeId];
+  saveSection("profiles", data);
+}
+
 // Автор записи — id текущего члена семьи (или null, если «кто я» не выбран).
 function currentMemberId() {
   const me = currentMember();

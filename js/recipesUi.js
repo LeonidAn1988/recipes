@@ -50,6 +50,19 @@ function initRecipesUi() {
     el("formYield").setCustomValidity(bad ? "Вес в граммах, например 850" : "");
   });
   el("printRecipeBtn").addEventListener("click", () => window.print());
+  let noteTimer = null;
+  el("memberNote").addEventListener("input", () => {
+    clearTimeout(noteTimer);
+    const recipeId = selectedId;
+    const text = el("memberNote").value;
+    noteTimer = setTimeout(() => {
+      saveMemberNote(recipeId, text);
+      el("memberNoteHint").textContent = "Сохранено. Видно только вам.";
+    }, 700);
+  });
+  el("memberNote").addEventListener("focus", () => {
+    if (!currentMember()) openSettings("Чтобы вести свои заметки, выберите, кто вы, или добавьте своё имя.");
+  });
   el("cookBtn").addEventListener("click", () => {
     const recipe = recipes.find(r => r.id === selectedId);
     if (recipe) openCookMode(recipe);
@@ -704,6 +717,10 @@ function renderDetail() {
   renderSteps(recipe);
   renderVideo(recipe);
   renderYield(recipe);
+  const me = currentMember();
+  el("memberNote").value = memberNote(recipe.id);
+  el("memberNote").readOnly = !me;
+  el("memberNoteHint").textContent = me ? `Видны только вам (${me.name}) и сохраняются сами.` : "Выберите в настройках, кто вы, — и здесь можно будет писать свои заметки.";
 }
 
 // Теги в карточке кликабельны: нажатие показывает все рецепты с этим тегом.
@@ -724,6 +741,7 @@ function renderDetailTags(recipe) {
 }
 
 function renderRecipesView() {
+  try { if (selectedId) sessionStorage.setItem("recipes.selected", selectedId); } catch {}
   renderKcalPresets();
   renderCategoryFilters();
   renderTagFilters();

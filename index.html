@@ -20,7 +20,7 @@
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="css/style.css?v=20260924024012">
+<link rel="stylesheet" href="css/style.css?v=20260924024324">
 </head>
 <body>
 
@@ -210,6 +210,12 @@
           <ol id="detailSteps" class="steps-list"></ol>
         </section>
 
+        <section class="detail-section" id="notesSection">
+          <h3>Мои заметки</h3>
+          <textarea id="memberNote" rows="3" aria-label="Мои заметки к рецепту" placeholder="Например: детям без перца, соли меньше, в следующий раз — больше моркови"></textarea>
+          <p class="hint" id="memberNoteHint">Видны только вам и сохраняются сами.</p>
+        </section>
+
         <section class="detail-section hidden" id="videoSection">
           <h3>Видео приготовления</h3>
           <div class="video-wrap" id="videoWrap"></div>
@@ -323,11 +329,29 @@
       </section>
 
       <section class="detail-section">
-        <h3>Список покупок</h3>
+        <div class="section-head">
+          <h3>Список покупок</h3>
+          <button type="button" id="resetShoppingBtn" class="btn btn-secondary btn-small">Снять отметки</button>
+        </div>
+        <p class="hint">Отметки «куплено» видит вся семья — синхронизируются через облако. 🏠 — уже есть дома: продукт уйдёт в кладовую и не попадёт в список.</p>
         <div id="shoppingList" class="shopping-list"></div>
         <p class="hint" id="shoppingHint"></p>
+        <details class="pantry" id="pantryBlock">
+          <summary id="pantrySummary">Есть дома</summary>
+          <div id="pantryList" class="chip-row"></div>
+        </details>
       </section>
     </div>
+
+    <section class="detail-section templates">
+      <h3>Шаблоны меню</h3>
+      <p class="hint">Сохраните удачное меню — потом загрузите его одной кнопкой.</p>
+      <form id="templateForm" class="inline-form">
+        <input type="text" id="templateName" maxlength="40" autocomplete="off" aria-label="Название шаблона" placeholder="Название, например «Рабочая неделя»">
+        <button type="submit" class="btn btn-secondary btn-small">Сохранить текущее меню</button>
+      </form>
+      <ul id="templateList" class="bottle-list"></ul>
+    </section>
   </div>
 </section>
 
@@ -568,25 +592,25 @@
 <datalist id="productCategoriesList"></datalist>
 <datalist id="recipeCategoriesList"></datalist>
 
-<script src="js/products.js?v=20260924024012"></script>
-<script src="js/store.js?v=20260924024012"></script>
-<script src="js/themes.js?v=20260924024012"></script>
-<script src="js/profiles.js?v=20260924024012"></script>
-<script src="js/sync.js?v=20260924024012"></script>
-<script src="js/nutrition.js?v=20260924024012"></script>
-<script src="js/recipes.js?v=20260924024012"></script>
-<script src="js/app.js?v=20260924024012"></script>
-<script src="js/stepsMeta.js?v=20260924024012"></script>
-<script src="js/recipesUi.js?v=20260924024012"></script>
-<script src="js/yieldUi.js?v=20260924024012"></script>
-<script src="js/productsUi.js?v=20260924024012"></script>
-<script src="js/tinctureCalc.js?v=20260924024012"></script>
-<script src="js/tinctureUi.js?v=20260924024012"></script>
-<script src="js/canningData.js?v=20260924024012"></script>
-<script src="js/canningCalc.js?v=20260924024012"></script>
-<script src="js/canningUi.js?v=20260924024012"></script>
-<script src="js/timers.js?v=20260924024012"></script>
-<script src="js/cookMode.js?v=20260924024012"></script>
-<script src="js/menuUi.js?v=20260924024012"></script>
+<script src="js/products.js?v=20260924024324"></script>
+<script src="js/store.js?v=20260924024324"></script>
+<script src="js/themes.js?v=20260924024324"></script>
+<script src="js/profiles.js?v=20260924024324"></script>
+<script src="js/sync.js?v=20260924024324"></script>
+<script src="js/nutrition.js?v=20260924024324"></script>
+<script src="js/recipes.js?v=20260924024324"></script>
+<script src="js/app.js?v=20260924024324"></script>
+<script src="js/stepsMeta.js?v=20260924024324"></script>
+<script src="js/recipesUi.js?v=20260924024324"></script>
+<script src="js/yieldUi.js?v=20260924024324"></script>
+<script src="js/productsUi.js?v=20260924024324"></script>
+<script src="js/tinctureCalc.js?v=20260924024324"></script>
+<script src="js/tinctureUi.js?v=20260924024324"></script>
+<script src="js/canningData.js?v=20260924024324"></script>
+<script src="js/canningCalc.js?v=20260924024324"></script>
+<script src="js/canningUi.js?v=20260924024324"></script>
+<script src="js/timers.js?v=20260924024324"></script>
+<script src="js/cookMode.js?v=20260924024324"></script>
+<script src="js/menuUi.js?v=20260924024324"></script>
 </body>
 </html>

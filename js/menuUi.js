@@ -18,11 +18,39 @@ function initMenuUi() {
 
   el("clearMenuBtn").addEventListener("click", () => {
     if (menuItems.length === 0) return;
-    if (!confirm("Очистить меню?")) return;
+    if (!confirm("Очистить меню? Отметки «куплено» тоже снимутся.")) return;
     menuItems = [];
     saveMenu(menuItems);
+    const planner = loadSection("planner");
+    planner.checked = {};
+    saveSection("planner", planner);
     render();
   });
+
+  el("resetShoppingBtn").addEventListener("click", () => {
+    const planner = loadSection("planner");
+    if (!Object.keys(planner.checked).length) return;
+    if (!confirm("Снять все отметки «куплено»?")) return;
+    planner.checked = {};
+    saveSection("planner", planner);
+    renderMenuView();
+  });
+
+  el("templateForm").addEventListener("submit", e => {
+    e.preventDefault();
+    const name = el("templateName").value.trim();
+    if (!name) return el("templateName").focus();
+    if (!menuItems.length) {
+      alert("Меню пустое — сначала добавьте блюда.");
+      return;
+    }
+    const planner = loadSection("planner");
+    planner.templates.push({ id: newId("tpl"), name, items: menuItems.map(i => ({ ...i })) });
+    saveSection("planner", planner);
+    el("templateName").value = "";
+    renderTemplates();
+  });
+  el("templateList").addEventListener("click", onTemplateAction);
 }
 
 function addRecipeToMenu(recipeId) {
@@ -131,6 +159,7 @@ function renderMenuView() {
 
   el("menuEmpty").classList.toggle("hidden", items.length > 0);
   el("menuBody").classList.toggle("hidden", items.length === 0);
+  renderTemplates();
   if (items.length === 0) return;
 
   renderMenuItems(items, day);
@@ -249,38 +278,57 @@ function renderMenuSummary(day) {
   wrap.appendChild(glCard);
 }
 
+// Отделы магазина в порядке обхода: категории продуктов сводятся к отделам.
+const STORE_DEPARTMENTS = [
+  { name: "Овощи и фрукты", categories: ["Овощи и грибы", "Фрукты и ягоды"] },
+  { name: "Мясо, птица, рыба", categories: ["Мясо, птица, рыба"] },
+  { name: "Молочное и яйца", categories: ["Молочные и яйца"] },
+  { name: "Хлеб и бакалея", categories: ["Крупы и мучное", "Бобовые", "Орехи и семена"] },
+  { name: "Сладкое", categories: ["Сахар и сладости"] },
+  { name: "Масла, соусы, специи", categories: ["Масла, соусы и специи"] },
+  { name: "Напитки", categories: ["Напитки"] }
+];
+const OTHER_DEPARTMENT = "Прочее (нет в базе продуктов)";
+
+function departmentOf(product) {
+  if (!product) return OTHER_DEPARTMENT;
+  const dep = STORE_DEPARTMENTS.find(d => d.categories.includes(product.category));
+  return dep ? dep.name : OTHER_DEPARTMENT;
+}
+
 function renderShoppingList(shopping) {
   const wrap = el("shoppingList");
   wrap.innerHTML = "";
+  const planner = loadSection("planner");
+  const pantry = new Set(planner.pantry || []);
+  // Воду покупать не нужно — в список её не выводим.
+  const toBuy = shopping.filter(e => !pantry.has(e.name) && !/^вода$/i.test(e.name));
 
   const groups = new Map();
-  shopping.forEach(entry => {
-    const category = entry.product ? entry.product.category : "Нет в базе продуктов";
-    if (!groups.has(category)) groups.set(category, []);
-    groups.get(category).push(entry);
+  toBuy.forEach(entry => {
+    const dep = departmentOf(entry.product);
+    if (!groups.has(dep)) groups.set(dep, []);
+    groups.get(dep).push(entry);
   });
+  const order = [...STORE_DEPARTMENTS.map(d => d.name), OTHER_DEPARTMENT];
 
-  const order = [...PRODUCT_CATEGORIES, "Нет в базе продуктов"];
-  const sortedGroups = [...groups.entries()]
-    .sort((a, b) => order.indexOf(a[0]) - order.indexOf(b[0]));
-
-  sortedGroups.forEach(([category, entries]) => {
+  [...groups.entries()].sort((a, b) => order.indexOf(a[0]) - order.indexOf(b[0])).forEach(([dep, entries]) => {
     const group = document.createElement("div");
     group.className = "shopping-group";
-
     const heading = document.createElement("h4");
-    heading.textContent = category;
+    heading.textContent = dep;
     group.appendChild(heading);
 
     const ul = document.createElement("ul");
-    entries
-      .sort((a, b) => a.name.localeCompare(b.name, "ru"))
+    // Купленное — вниз группы, чтобы перед глазами было то, что осталось.
+    entries.sort((a, b) => (Boolean(planner.checked[a.name]) - Boolean(planner.checked[b.name])) || a.name.localeCompare(b.name, "ru"))
       .forEach(entry => {
         const li = document.createElement("li");
         const label = document.createElement("label");
-
         const checkbox = document.createElement("input");
         checkbox.type = "checkbox";
+        checkbox.checked = Boolean(planner.checked[entry.name]);
+        checkbox.addEventListener("change", () => setShoppingChecked(entry.name, checkbox.checked));
 
         const name = document.createElement("span");
         name.className = "shopping-name";
@@ -288,29 +336,123 @@ function renderShoppingList(shopping) {
 
         const amount = document.createElement("span");
         amount.className = "shopping-amount";
-        amount.textContent = entry.grams > 0
-          ? formatQuantity(entry.product, entry.grams)
-          : "по вкусу";
+        amount.textContent = entry.grams > 0 ? formatQuantity(entry.product, entry.grams) : "по вкусу";
         if (entry.grams - entry.netGrams > 0.5) {
           amount.title = `С запасом на очистку. Чистого веса нужно ${formatQuantity(entry.product, entry.netGrams)}.`;
           amount.textContent += " *";
         }
-
         label.append(checkbox, name, amount);
-        li.appendChild(label);
+
+        const home = document.createElement("button");
+        home.type = "button";
+        home.className = "btn-icon pantry-btn";
+        home.textContent = "🏠";
+        home.title = "Есть дома — убрать из списка";
+        home.setAttribute("aria-label", `${entry.name}: есть дома, не покупать`);
+        home.addEventListener("click", () => togglePantry(entry.name, true));
+
+        li.append(label, home);
+        if (checkbox.checked) li.classList.add("bought");
         ul.appendChild(li);
       });
-
     group.appendChild(ul);
     wrap.appendChild(group);
   });
 
-  const unknown = shopping.filter(e => !e.product).length;
+  renderPantry(shopping, pantry);
+
+  const unknown = toBuy.filter(e => !e.product).length;
   el("shoppingHint").textContent = unknown > 0
     ? `${unknown} ${plural(unknown, "позиции нет", "позиций нет", "позиций нет")} в базе продуктов — ` +
       "их количество посчитано по общим нормам единиц, а БЖУ в итогах не учтены."
     : "Количества суммированы по всем блюдам меню и пересчитаны под указанное число порций.";
-  if (shopping.some(e => e.grams - e.netGrams > 0.5)) {
+  if (toBuy.some(e => e.grams - e.netGrams > 0.5)) {
     el("shoppingHint").textContent += " * — вес до очистки: с запасом на отходы (картофель, морковь, рыба и т. п.).";
   }
+}
+
+function renderPantry(shopping, pantry) {
+  const block = el("pantryBlock");
+  const list = el("pantryList");
+  list.innerHTML = "";
+  const inMenu = shopping.filter(e => pantry.has(e.name)).map(e => e.name);
+  const other = [...pantry].filter(n => !inMenu.includes(n));
+  el("pantrySummary").textContent = `Есть дома (${pantry.size})` + (inMenu.length ? ` — в этом меню не покупать: ${inMenu.length}` : "");
+  block.classList.toggle("hidden", pantry.size === 0);
+  [...inMenu, ...other].forEach(name => {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "chip" + (inMenu.includes(name) ? " active" : "");
+    chip.textContent = name + " ✕";
+    chip.title = "Закончилось — вернуть в список покупок";
+    chip.setAttribute("aria-label", `${name}: закончилось, вернуть в список`);
+    chip.addEventListener("click", () => togglePantry(name, false));
+    list.appendChild(chip);
+  });
+}
+
+function setShoppingChecked(name, checked) {
+  const planner = loadSection("planner");
+  if (checked) planner.checked[name] = true;
+  else delete planner.checked[name];
+  saveSection("planner", planner);
+  renderMenuView();
+}
+
+function togglePantry(name, add) {
+  const planner = loadSection("planner");
+  const set = new Set(planner.pantry || []);
+  if (add) set.add(name);
+  else set.delete(name);
+  planner.pantry = [...set].sort((a, b) => a.localeCompare(b, "ru"));
+  delete planner.checked[name];
+  saveSection("planner", planner);
+  renderMenuView();
+}
+
+// --- Шаблоны меню ---
+
+function renderTemplates() {
+  const list = el("templateList");
+  const { templates } = loadSection("planner");
+  list.innerHTML = templates.length ? templates.map(t => {
+    const names = t.items.map(i => (recipes.find(r => r.id === i.recipeId) || {}).title).filter(Boolean);
+    return `<li class="bottle">
+      <div class="bottle-main">
+        <span class="bottle-title">${esc(t.name)}</span>
+        <div class="bottle-facts">${esc(names.join(", ") || "рецепты удалены")}</div>
+      </div>
+      <div class="bottle-actions">
+        <button type="button" class="btn btn-secondary btn-small" data-tpl="load" data-id="${t.id}">Загрузить</button>
+        <button type="button" class="btn btn-secondary btn-small" data-tpl="add" data-id="${t.id}">Добавить к меню</button>
+        <button type="button" class="btn-icon" data-tpl="del" data-id="${t.id}" aria-label="Удалить шаблон">✕</button>
+      </div>
+    </li>`;
+  }).join("") : `<li class="hint">Шаблонов пока нет.</li>`;
+}
+
+function onTemplateAction(e) {
+  const btn = e.target.closest("[data-tpl]");
+  if (!btn) return;
+  const planner = loadSection("planner");
+  const t = planner.templates.find(x => x.id === btn.dataset.id);
+  if (!t) return;
+  const valid = t.items.filter(i => recipes.some(r => r.id === i.recipeId));
+  if (btn.dataset.tpl === "del") {
+    if (!confirm(`Удалить шаблон «${t.name}»?`)) return;
+    planner.templates = planner.templates.filter(x => x.id !== t.id);
+    saveSection("planner", planner);
+  } else if (btn.dataset.tpl === "load") {
+    if (menuItems.length && !confirm(`Заменить текущее меню шаблоном «${t.name}»?`)) return;
+    menuItems = valid.map(i => ({ ...i }));
+    saveMenu(menuItems);
+  } else {
+    valid.forEach(i => {
+      const existing = menuItems.find(m => m.recipeId === i.recipeId);
+      if (existing) existing.servings += i.servings;
+      else menuItems.push({ ...i });
+    });
+    saveMenu(menuItems);
+  }
+  renderMenuView();
 }

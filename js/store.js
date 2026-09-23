@@ -13,7 +13,8 @@ const STORAGE_KEYS = {
   seeded: "recipes.seeded",
   tinctures: "recipes.tinctures",
   canning: "recipes.canning",
-  profiles: "recipes.profiles"
+  profiles: "recipes.profiles",
+  planner: "recipes.planner"
 };
 
 // Разделы книги кроме рецептов: настойки, автоклав, профили семьи.
@@ -21,7 +22,10 @@ const STORAGE_KEYS = {
 const SECTION_DEFAULTS = {
   tinctures: () => ({ recipes: [], bottles: [] }),
   canning: () => ({ batches: [], settings: {} }),
-  profiles: () => ({ members: [], favorites: {} })
+  profiles: () => ({ members: [], favorites: {} }),
+  // Список покупок и меню: отметки «куплено» (общие для семьи), кладовая
+  // «есть дома» и сохранённые шаблоны меню.
+  planner: () => ({ checked: {}, pantry: [], templates: [] })
 };
 
 function loadSection(name) {
@@ -178,7 +182,8 @@ function buildExport(recipesList) {
     customProducts,
     tinctures: loadSection("tinctures"),
     canning: loadSection("canning"),
-    profiles: loadSection("profiles")
+    profiles: loadSection("profiles"),
+    planner: loadSection("planner")
   };
 }
 
@@ -232,7 +237,8 @@ function parseImport(text) {
     // Разделы появились позже — в старых файлах их нет, это нормально.
     tinctures: section(data.tinctures),
     canning: section(data.canning),
-    profiles: section(data.profiles)
+    profiles: section(data.profiles),
+    planner: section(data.planner)
   };
 }
 
@@ -243,7 +249,7 @@ function mergeById(current = [], incoming = []) {
 }
 
 function importSections(imported, mode) {
-  ["tinctures", "canning", "profiles"].forEach(name => {
+  ["tinctures", "canning", "profiles", "planner"].forEach(name => {
     const inc = imported[name];
     if (!inc) return;
     if (mode === "replace") {
@@ -256,8 +262,15 @@ function importSections(imported, mode) {
       cur.bottles = mergeById(cur.bottles, inc.bottles);
     } else if (name === "canning") {
       cur.batches = mergeById(cur.batches, inc.batches);
+    } else if (name === "planner") {
+      cur.templates = mergeById(cur.templates, inc.templates);
+      cur.pantry = [...new Set([...(cur.pantry || []), ...(inc.pantry || [])])];
     } else {
       cur.members = mergeById(cur.members, inc.members);
+      cur.notes = cur.notes || {};
+      Object.entries(inc.notes || {}).forEach(([member, notes]) => {
+        cur.notes[member] = { ...(notes || {}), ...(cur.notes[member] || {}) };
+      });
       Object.entries(inc.favorites || {}).forEach(([member, ids]) => {
         cur.favorites[member] = [...new Set([...(cur.favorites[member] || []), ...(ids || [])])];
       });

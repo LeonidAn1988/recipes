@@ -63,6 +63,9 @@ const VIEWS = {
 function setView(name) {
   if (!VIEWS[name]) name = "recipes";
   activeView = name;
+  // Раздел и открытый рецепт переживают перезагрузку (например, когда из
+  // облака пришла свежая книга) — в пределах вкладки браузера.
+  try { sessionStorage.setItem("recipes.view", name); } catch {}
   Object.keys(VIEWS).forEach(v => {
     el("view-" + v).classList.toggle("hidden", v !== name);
   });
@@ -177,6 +180,15 @@ function init() {
   initCookMode();
   document.querySelectorAll(".modal").forEach(setupModal);
 
+  try {
+    const savedRecipe = sessionStorage.getItem("recipes.selected");
+    if (savedRecipe && recipes.some(r => r.id === savedRecipe)) selectedId = savedRecipe;
+    const savedView = sessionStorage.getItem("recipes.view");
+    if (savedView && VIEWS[savedView] && savedView !== "recipes") {
+      setView(savedView);
+      return;
+    }
+  } catch {}
   render();
 }
 
