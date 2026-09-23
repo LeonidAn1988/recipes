@@ -1111,3 +1111,6 @@ body.is-dragging * { cursor: grabbing !important; user-select: none; -webkit-use
   #recipeForm .table-scroll { border: none; overflow: visible; }
   .media-input input[type="url"] { flex-basis: 100%; }
 }
+
+.nutrition-note { grid-column: 1 / -1; margin: 0.2rem 0 0; }
+.form-hint { margin: -0.4rem 0 0.9rem; }

@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Рецепты">
 <title>Рецепты — книга рецептов</title>
-<link rel="stylesheet" href="css/style.css?v=20260923230743">
+<link rel="stylesheet" href="css/style.css?v=20260923231535">
 </head>
 <body>
 
@@ -77,6 +77,7 @@
           <span id="detailCategory" class="badge"></span>
           <span id="detailTime" class="badge"></span>
           <span id="detailServings" class="badge"></span>
+          <span id="detailMethod" class="badge"></span>
         </div>
         <div class="detail-tags hidden" id="detailTags"></div>
 
@@ -101,10 +102,14 @@
           <details class="formula-details">
             <summary>Как считается</summary>
             <ul class="formula-list">
-              <li><strong>Калорийность</strong> — коэффициенты Атуотера: белки × 4 + жиры × 9 + углеводы × 4 ккал/г.</li>
+              <li><strong>Пищевая ценность продуктов</strong> — на 100 г сырого очищенного продукта (таблицы Скурихина, USDA). Количества в рецепте — чистый вес.</li>
+              <li><strong>Потери при тепловой обработке</strong> — по справочнику «Химический состав пищевых продуктов» (ред. И. М. Скурихин, 1987). Мясо и птица: варка и жарка — белки −10 %, жиры −25 %; тушение, запекание, на пару — −5 % / −5 %. Рыба при варке: тощая — −3 % / −9 %, жирная (жира больше 8 %) — −14 % / −12 %; другие способы — −5 % / −5 %. Растительные и прочие продукты — −5 % белков, жиров и углеводов.</li>
+              <li><strong>Калорийность после обработки</strong> — табличная калорийность продукта минус энергия потерянных нутриентов по коэффициентам Атуотера: белки × 4 + жиры × 9 + углеводы × 4 ккал/г.</li>
+              <li><strong>На 100 г готового блюда</strong> — всё блюдо ÷ выход × 100. Выход — вес готового блюда: взвешенный вами или оценка по нормам ужарки и уварки (мясо теряет до 40 %, рыба 15–22 %, крупы при варке без воды в рецепте набирают её примерно в 2,4 раза). Порция — всё блюдо ÷ число порций, от выхода не зависит.</li>
               <li><strong>ГИ блюда</strong> — средневзвешенное по вкладу углеводов: Σ(ГИ ингредиента × его углеводы) ÷ Σ(углеводы). Учитываются только продукты с известным ГИ.</li>
               <li><strong>Гликемическая нагрузка</strong> — ГН = ГИ × углеводы (г) ÷ 100. Считается на одну порцию.</li>
               <li>Шкала ГИ: низкий ≤ 55, средний 56–69, высокий ≥ 70. Шкала ГН на порцию: низкая ≤ 10, средняя 11–19, высокая ≥ 20.</li>
+              <li>Ложки — без горки: ст.л. = 15 мл, ч.л. = 5 мл; вес зависит от продукта (масло 14 г, сахар 12 г, мука 10 г, соль 18 г в ст.л.).</li>
               <li>Значения ориентировочные: реальный отклик зависит от сорта, обработки и сочетания продуктов — жиры и белки в блюде замедляют усвоение углеводов.</li>
             </ul>
           </details>
@@ -330,6 +335,16 @@
         </label>
       </div>
 
+      <div class="form-row">
+        <label>Способ приготовления
+          <select id="formMethod"></select>
+        </label>
+        <label>Выход готового блюда, г
+          <input type="text" id="formYield" inputmode="decimal" autocomplete="off" placeholder="если взвесили">
+        </label>
+      </div>
+      <p class="hint form-hint">Способ приготовления влияет на потери белков, жиров и углеводов. Выход — вес готового блюда: по нему считается «на 100 г». Если не указать, оценим по способу приготовления.</p>
+
       <fieldset class="form-block">
         <legend>Фото готового блюда</legend>
         <div class="media-input">
@@ -484,15 +499,15 @@
 <datalist id="productCategoriesList"></datalist>
 <datalist id="recipeCategoriesList"></datalist>
 
-<script src="js/products.js?v=20260923230743"></script>
-<script src="js/store.js?v=20260923230743"></script>
-<script src="js/sync.js?v=20260923230743"></script>
-<script src="js/nutrition.js?v=20260923230743"></script>
-<script src="js/recipes.js?v=20260923230743"></script>
-<script src="js/app.js?v=20260923230743"></script>
-<script src="js/recipesUi.js?v=20260923230743"></script>
-<script src="js/yieldUi.js?v=20260923230743"></script>
-<script src="js/productsUi.js?v=20260923230743"></script>
-<script src="js/menuUi.js?v=20260923230743"></script>
+<script src="js/products.js?v=20260923231535"></script>
+<script src="js/store.js?v=20260923231535"></script>
+<script src="js/sync.js?v=20260923231535"></script>
+<script src="js/nutrition.js?v=20260923231535"></script>
+<script src="js/recipes.js?v=20260923231535"></script>
+<script src="js/app.js?v=20260923231535"></script>
+<script src="js/recipesUi.js?v=20260923231535"></script>
+<script src="js/yieldUi.js?v=20260923231535"></script>
+<script src="js/productsUi.js?v=20260923231535"></script>
+<script src="js/menuUi.js?v=20260923231535"></script>
 </body>
 </html>

@@ -32,6 +32,12 @@ function initRecipesUi() {
   el("cancelModalBtn").addEventListener("click", closeRecipeModal);
   el("formImage").addEventListener("input", syncImagePreview);
   el("formTags").addEventListener("input", renderTagSuggest);
+  COOKING_METHODS.forEach(m => el("formMethod").appendChild(new Option(m.label, m.id)));
+  el("formYield").addEventListener("input", () => {
+    const v = el("formYield").value.trim();
+    const bad = v !== "" && !(parseAmount(v) > 0);
+    el("formYield").setCustomValidity(bad ? "Вес в граммах, например 850" : "");
+  });
   el("printRecipeBtn").addEventListener("click", () => window.print());
   el("addToMenuBtn").addEventListener("click", () => {
     if (selectedId) addRecipeToMenu(selectedId);
@@ -248,8 +254,8 @@ function renderNutrition(total) {
 
   const columns = [
     { key: "perServing", label: total.servings > 0 ? `На порцию (${total.servings} шт.)` : "На порцию" },
-    { key: "per100g", label: "На 100 г" },
-    { key: "total", label: `Всего (${Math.round(total.grams)} г)` }
+    { key: "per100g", label: "На 100 г готового блюда" },
+    { key: "total", label: `Всё блюдо (${total.yieldMeasured ? "" : "≈ "}${Math.round(total.yieldGrams)} г)` }
   ];
 
   columns.forEach(col => {
@@ -257,6 +263,16 @@ function renderNutrition(total) {
     if (!data) return;
     summaryEl.appendChild(nutritionCard(col.label, data));
   });
+
+  const note = document.createElement("p");
+  note.className = "hint nutrition-note";
+  const yieldText = total.yieldMeasured
+    ? `Выход ${Math.round(total.yieldGrams)} г — по вашему взвешиванию.`
+    : `Выход ≈ ${Math.round(total.yieldGrams)} г — оценка по способу приготовления; взвесьте готовое блюдо и укажите вес в рецепте, чтобы «на 100 г» было точным.`;
+  note.textContent = total.method === "raw"
+    ? `Без тепловой обработки. ${total.yieldMeasured ? yieldText : ""}`.trim()
+    : `${methodLabel(total.method)}: учтены потери при тепловой обработке — ${Math.round(total.raw.kcal - total.kcal)} ккал на всё блюдо. ${yieldText}`;
+  summaryEl.appendChild(note);
 
   // Категорию считаем по тому же числу, которое видит пользователь: иначе
   // на границе шкалы получается «10 — средняя» из-за скрытых десятых.
@@ -335,17 +351,32 @@ function renderIngredientsTable(recipe, rows, total) {
     tbody.appendChild(tr);
   });
 
+  const raw = total.raw;
+  const cooked = total.method !== "raw";
   tfoot.appendChild(buildRow([
-    { text: "Итого" },
+    { text: cooked ? "Итого, сырые продукты" : "Итого" },
     { text: "" },
     { text: "" },
-    { text: Math.round(total.grams), cls: "num" },
-    { text: Math.round(total.kcal), cls: "num" },
-    { text: fmt(total.protein), cls: "num" },
-    { text: fmt(total.fat), cls: "num" },
-    { text: fmt(total.carbs), cls: "num" },
-    { text: total.gi === null ? "—" : Math.round(total.gi), cls: "num" }
+    { text: Math.round(raw.grams), cls: "num" },
+    { text: Math.round(raw.kcal), cls: "num" },
+    { text: fmt(raw.protein), cls: "num" },
+    { text: fmt(raw.fat), cls: "num" },
+    { text: fmt(raw.carbs), cls: "num" },
+    { text: cooked ? "" : (total.gi === null ? "—" : Math.round(total.gi)), cls: "num" }
   ]));
+  if (cooked) {
+    tfoot.appendChild(buildRow([
+      { text: `После обработки (${methodLabel(total.method).toLowerCase()})` },
+      { text: "" },
+      { text: "" },
+      { text: (total.yieldMeasured ? "" : "≈ ") + Math.round(total.yieldGrams), cls: "num" },
+      { text: Math.round(total.kcal), cls: "num" },
+      { text: fmt(total.protein), cls: "num" },
+      { text: fmt(total.fat), cls: "num" },
+      { text: fmt(total.carbs), cls: "num" },
+      { text: total.gi === null ? "—" : Math.round(total.gi), cls: "num" }
+    ]));
+  }
 }
 
 function renderSteps(recipe) {
@@ -442,6 +473,7 @@ function renderDetail() {
   timeEl.classList.toggle("hidden", !recipe.time);
 
   renderDetailTags(recipe);
+  el("detailMethod").textContent = methodLabel(recipe.method || "raw");
 
   const servingsEl = el("detailServings");
   servingsEl.textContent = recipe.servings || "";
@@ -756,6 +788,8 @@ function openRecipeModal(recipe) {
     el("formTags").value = (recipe.tags || []).join(", ");
     el("formTime").value = recipe.time || "";
     el("formServings").value = recipe.servings || "";
+    el("formMethod").value = recipe.method || "raw";
+    el("formYield").value = recipe.yieldGrams ? formatAmount(recipe.yieldGrams, false) : "";
     el("formImage").value = recipe.image || "";
     el("formVideo").value = recipe.video || "";
 
@@ -764,6 +798,8 @@ function openRecipeModal(recipe) {
   } else {
     el("modalTitle").textContent = "Новый рецепт";
     el("recipeId").value = "";
+    el("formMethod").value = "raw";
+    el("formYield").value = "";
     addIngredientRow();
     addStepRow();
   }
@@ -819,6 +855,8 @@ function handleRecipeSubmit(e) {
     tags: parseTags(el("formTags").value),
     time: el("formTime").value.trim(),
     servings: el("formServings").value.trim(),
+    method: el("formMethod").value,
+    yieldGrams: parseAmount(el("formYield").value) > 0 ? parseAmount(el("formYield").value) : null,
     image: el("formImage").value.trim(),
     video: el("formVideo").value.trim(),
     ingredients: collectIngredients(),

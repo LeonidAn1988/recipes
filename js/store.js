@@ -70,13 +70,22 @@ function loadRecipes() {
     return structuredClone(DEFAULT_RECIPES);
   }
 
-  // Теги появились позже рецептов: стартовым рецептам без тегов проставляем
-  // их из стартового набора. Пустой массив — осознанно снятые теги, не трогаем.
+  // Теги и способ приготовления появились позже рецептов: стартовым рецептам
+  // без них проставляем значения из стартового набора. Пустой массив тегов —
+  // осознанно снятые теги, не трогаем.
   let tagsAdded = false;
   stored.forEach(r => {
     if (r.tags === undefined && STARTER_TAGS[r.id]) {
       r.tags = [...STARTER_TAGS[r.id]];
       tagsAdded = true;
+    }
+    // Способ приготовления появился ещё позже — та же логика.
+    if (r.method === undefined) {
+      const seed = DEFAULT_RECIPES.find(d => d.id === r.id);
+      if (seed) {
+        r.method = seed.method;
+        tagsAdded = true;
+      }
     }
   });
 

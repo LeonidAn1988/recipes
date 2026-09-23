@@ -1140,3 +1140,19 @@ const STARTER_TAGS = {
 };
 
 DEFAULT_RECIPES.forEach(r => { r.tags = STARTER_TAGS[r.id] || []; });
+
+// Способ приготовления стартовых рецептов. Как и теги, доливается в уже
+// сохранённую книгу рецептам, у которых способа ещё нет (см. store.js).
+// Вафли пекутся в вафельнице — это выпечка.
+const STARTER_METHODS = {
+  "seed-1": "fry", "seed-2": "boil", "seed-3": "fry", "seed-4": "fry",
+  "seed-5": "boil", "seed-6": "boil", "seed-7": "boil",
+  "seed-8": "raw", "seed-9": "raw", "seed-10": "boil",
+  "seed-11": "stew", "seed-12": "stew", "seed-13": "bake", "seed-14": "stew", "seed-15": "boil",
+  "seed-16": "bake", "seed-17": "bake", "seed-18": "steam",
+  "seed-32": "fry"
+};
+
+DEFAULT_RECIPES.forEach(r => {
+  r.method = STARTER_METHODS[r.id] || (r.category === "Вафли" ? "bake" : "raw");
+});

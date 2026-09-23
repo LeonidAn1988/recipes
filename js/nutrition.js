@@ -14,6 +14,121 @@
 
 const KCAL_PER_G = { protein: 4, fat: 9, carbs: 4 };
 
+// --- Способ приготовления ---
+//
+// Тепловая обработка меняет две вещи:
+// 1. Часть белков, жиров и углеводов уходит в бульон, сок и вытопленный жир.
+//    Коэффициенты потерь — по справочнику «Химический состав пищевых
+//    продуктов» (под ред. И. М. Скурихина, М. В. Волгарева, 1987, т. 1,
+//    раздел «Тепловая кулинарная обработка»):
+//    • мясо и птица: варка и жарка — белки 10 %, жиры 25 %;
+//      тушение, запекание — белки 5 %, жиры 5 %;
+//    • рыба, варка: тощая — белки 3 %, жиры 9 %; жирная — белки 14 %, жиры 12 %;
+//      остальные способы — 5 % / 5 %, как минимальные потери при запекании;
+//    • растительные и прочие продукты — 2–5 %, берём верхнюю границу 5 %.
+//    На пару для мяса и птицы берём коэффициенты тушения: продукт не
+//    контактирует с водой, потери ниже, чем при варке.
+//    Калорийность после обработки = табличная калорийность −
+//    (4 × потерянные белки + 9 × потерянные жиры + 4 × потерянные углеводы).
+// 2. Меняется масса: мясо и рыба теряют влагу, крупы набирают воду.
+//    Это влияет только на показатель «на 100 г готового блюда» — порция
+//    и итог по блюду от массы не зависят. Коэффициенты массы ориентировочные
+//    (нормы ужарки и уварки общепита: мясо — до 40 % при варке и до 35 %
+//    при жарке, рыба — 15–22 %, овощи — около 10 % при варке и до 35 % при
+//    жарке, яйца — 8–12 %, шампиньоны — 30 % при варке и 50–60 % при жарке).
+//    Точнее всего — взвесить готовое блюдо и указать выход в рецепте.
+
+const COOKING_METHODS = [
+  { id: "raw", label: "Без термообработки" },
+  { id: "boil", label: "Варка" },
+  { id: "steam", label: "На пару" },
+  { id: "stew", label: "Тушение" },
+  { id: "fry", label: "Жарка" },
+  { id: "bake", label: "Запекание, выпечка" }
+];
+
+// Потери [белки, жиры, углеводы] в долях. Для рыбы при варке — см. fishLoss.
+const NUTRIENT_LOSS = {
+  raw:   { meat: [0, 0, 0],       poultry: [0, 0, 0],       fish: [0, 0, 0],       other: [0, 0, 0] },
+  boil:  { meat: [0.10, 0.25, 0], poultry: [0.10, 0.25, 0], fish: null,            other: [0.05, 0.05, 0.05] },
+  fry:   { meat: [0.10, 0.25, 0], poultry: [0.10, 0.25, 0], fish: [0.05, 0.05, 0], other: [0.05, 0.05, 0.05] },
+  stew:  { meat: [0.05, 0.05, 0], poultry: [0.05, 0.05, 0], fish: [0.05, 0.05, 0], other: [0.05, 0.05, 0.05] },
+  bake:  { meat: [0.05, 0.05, 0], poultry: [0.05, 0.05, 0], fish: [0.05, 0.05, 0], other: [0.05, 0.05, 0.05] },
+  steam: { meat: [0.05, 0.05, 0], poultry: [0.05, 0.05, 0], fish: [0.05, 0.05, 0], other: [0.05, 0.05, 0.05] }
+};
+
+// Рыба делится по жирности: до 8 % жира — тощая и средней жирности, выше — жирная.
+function fishLoss(product) {
+  return product.fat > 8 ? [0.14, 0.12, 0] : [0.03, 0.09, 0];
+}
+
+// Масса после обработки / масса до неё. grain — сухие крупы, макароны и
+// бобовые: при варке без жидкости в рецепте набирают воду сами (привар);
+// если вода или молоко есть среди ингредиентов, их масса уже учтена —
+// коэффициент крупы 1, а жидкость теряет часть на испарение (ключ water).
+const MASS_FACTOR = {
+  raw:   {},
+  boil:  { meat: 0.60, poultry: 0.75, fish: 0.80, egg: 0.90, veg: 0.90, mushroom: 0.70, grain: 2.4, water: 0.90 },
+  steam: { meat: 0.70, poultry: 0.80, fish: 0.86, egg: 0.90, veg: 0.92, mushroom: 0.80, water: 0.90 },
+  stew:  { meat: 0.60, poultry: 0.70, fish: 0.80, egg: 0.90, veg: 0.80, mushroom: 0.60, grain: 2.4, water: 0.90 },
+  fry:   { meat: 0.65, poultry: 0.70, fish: 0.80, egg: 0.90, veg: 0.70, mushroom: 0.50, flour: 0.90, dairy: 0.90, water: 0.80 },
+  bake:  { meat: 0.65, poultry: 0.70, fish: 0.82, egg: 0.90, veg: 0.80, mushroom: 0.60, flour: 0.90, dairy: 0.90, other: 0.90, fat: 0.90, water: 0.80 }
+};
+
+const FISH_RE = /лосос|сёмг|семг|форел|тунец|треск|камбал|рыб|кревет|кальмар|минтай|скумбри|сельд|горбуш|кет[аы]|судак|щук|карп|окун|хек|пикш|мидии|краб|икр/i;
+const POULTRY_RE = /куриц|цыпл|индейк|утк|гус[ья]|кролик/i;
+
+// Группа продукта для тепловой обработки. Определяется по категории и
+// названию, поэтому работает и для своих продуктов пользователя.
+function productGroup(product) {
+  const name = product.name;
+  const cat = product.category || "";
+  if (/^вода$/i.test(name) || (cat === "Напитки" && !/порошок/i.test(name))) return "water";
+  if (cat === "Мясо, птица, рыба") {
+    if (FISH_RE.test(name)) return "fish";
+    if (POULTRY_RE.test(name)) return "poultry";
+    return "meat";
+  }
+  if (cat === "Молочные и яйца") {
+    if (/яйц/i.test(name)) return "egg";
+    if (/масло/i.test(name)) return "fat";
+    return "dairy";
+  }
+  if (cat === "Крупы и мучное") {
+    return /сыр(ая|ой)|сух(ая|ой|ие)|хлопья|крупа|кускус|булгур|макарон/i.test(name) ? "grain" : "flour";
+  }
+  if (cat === "Бобовые") return /сух/i.test(name) ? "grain" : "veg";
+  if (cat === "Овощи и грибы") return /шампиньон|гриб|лисич|опят/i.test(name) ? "mushroom" : "veg";
+  if (cat === "Фрукты и ягоды") return "veg";
+  if (/масло|жир|сало/i.test(name)) return "fat";
+  return "other";
+}
+
+function methodLabel(id) {
+  const m = COOKING_METHODS.find(x => x.id === id);
+  return m ? m.label : COOKING_METHODS[0].label;
+}
+
+function nutrientLoss(method, product, group) {
+  const table = NUTRIENT_LOSS[method] || NUTRIENT_LOSS.raw;
+  if (group === "meat" || group === "poultry") return table[group];
+  if (group === "fish") return table.fish || fishLoss(product);
+  return table.other;
+}
+
+// Жидкость — вода, напитки и жидкие молочные (молоко, кефир, сливки):
+// крупа набирает именно её, а при варке часть жидкости испаряется.
+function isLiquid(product, group) {
+  if (group === "water") return true;
+  return group === "dairy" && Boolean(product.units && product.units["мл"]);
+}
+
+function massFactor(method, group, liquid, recipeHasLiquid) {
+  if (group === "grain" && recipeHasLiquid) return 1;
+  const table = MASS_FACTOR[method] || {};
+  return table[liquid ? "water" : group] ?? 1;
+}
+
 function findProduct(name) {
   return PRODUCTS.find(p => p.name === name);
 }
@@ -125,7 +240,7 @@ function calcIngredient(ingredient) {
   const grams = toGrams(Number(ingredient.amount) || 0, ingredient.unit, product);
 
   if (!product) {
-    return { grams, kcal: 0, protein: 0, fat: 0, carbs: 0, gi: null, known: false };
+    return { grams, kcal: 0, protein: 0, fat: 0, carbs: 0, gi: null, known: false, group: "other", liquid: false };
   }
 
   const k = grams / 100;
@@ -136,48 +251,94 @@ function calcIngredient(ingredient) {
     fat: product.fat * k,
     carbs: product.carbs * k,
     gi: product.gi,
-    known: true
+    known: true,
+    group: productGroup(product),
+    liquid: isLiquid(product, productGroup(product))
   };
 }
 
 // Считает итог по рецепту: суммы БЖУ, калорийность, ГИ и ГН.
+//
+// rows — ингредиенты в сыром виде (как в таблице рецепта).
+// total.raw — сумма по сырым продуктам; total — после тепловой обработки
+// (потери нутриентов по способу приготовления, см. NUTRIENT_LOSS).
+// total.grams — чистый вес сырых продуктов; total.yieldGrams — выход
+// готового блюда: взвешенный пользователем или оценка по MASS_FACTOR.
 function calcRecipe(recipe) {
+  const method = recipe.method || "raw";
   const rows = (recipe.ingredients || []).map(calcIngredient);
+  // Жидкости должно хватать на варку: минимум в 1,5 раза больше крупы.
+  // Иначе это соус (сливки к пасте), а крупа варится в воде вне рецепта.
+  const liquidGrams = rows.reduce((sum, r) => sum + (r.liquid ? r.grams : 0), 0);
+  const grainGrams = rows.reduce((sum, r) => sum + (r.group === "grain" ? r.grams : 0), 0);
+  const hasLiquid = grainGrams > 0 && liquidGrams >= grainGrams * 1.5;
 
-  const total = rows.reduce((acc, r) => ({
-    grams: acc.grams + r.grams,
-    kcal: acc.kcal + r.kcal,
-    protein: acc.protein + r.protein,
-    fat: acc.fat + r.fat,
-    carbs: acc.carbs + r.carbs
-  }), { grams: 0, kcal: 0, protein: 0, fat: 0, carbs: 0 });
+  const raw = { grams: 0, kcal: 0, protein: 0, fat: 0, carbs: 0 };
+  const total = { grams: 0, kcal: 0, protein: 0, fat: 0, carbs: 0 };
+  let estimatedYield = 0;
+
+  rows.forEach((r, i) => {
+    raw.grams += r.grams;
+    raw.kcal += r.kcal;
+    raw.protein += r.protein;
+    raw.fat += r.fat;
+    raw.carbs += r.carbs;
+
+    const product = r.known ? findProduct(recipe.ingredients[i].product) : null;
+    const [lp, lf, lc] = product ? nutrientLoss(method, product, r.group) : [0, 0, 0];
+    const lost = { protein: r.protein * lp, fat: r.fat * lf, carbs: r.carbs * lc };
+    r.cooked = {
+      protein: r.protein - lost.protein,
+      fat: r.fat - lost.fat,
+      carbs: r.carbs - lost.carbs,
+      kcal: Math.max(0, r.kcal - lost.protein * KCAL_PER_G.protein - lost.fat * KCAL_PER_G.fat - lost.carbs * KCAL_PER_G.carbs)
+    };
+
+    total.grams += r.grams;
+    total.kcal += r.cooked.kcal;
+    total.protein += r.cooked.protein;
+    total.fat += r.cooked.fat;
+    total.carbs += r.cooked.carbs;
+    estimatedYield += r.grams * massFactor(method, r.group, r.liquid, hasLiquid);
+  });
+
+  total.raw = raw;
+  total.method = method;
 
   // Калорийность по Атуотеру — как перекрёстная проверка табличных значений.
   total.kcalAtwater = total.protein * KCAL_PER_G.protein
     + total.fat * KCAL_PER_G.fat
     + total.carbs * KCAL_PER_G.carbs;
 
-  // Средневзвешенный ГИ по вкладу углеводов.
+  // Средневзвешенный ГИ по вкладу углеводов (после обработки).
   let carbsWithGi = 0;
   let giWeightedSum = 0;
   rows.forEach(r => {
-    if (r.gi !== null && r.gi !== undefined && r.carbs > 0) {
-      carbsWithGi += r.carbs;
-      giWeightedSum += r.gi * r.carbs;
+    const carbs = r.cooked.carbs;
+    if (r.gi !== null && r.gi !== undefined && carbs > 0) {
+      carbsWithGi += carbs;
+      giWeightedSum += r.gi * carbs;
     }
   });
 
   total.gi = carbsWithGi > 0 ? giWeightedSum / carbsWithGi : null;
   // Доля углеводов, для которых ГИ известен — показатель достоверности оценки.
   total.giCoverage = total.carbs > 0 ? carbsWithGi / total.carbs : 0;
+  // ГН считаем на все доступные углеводы блюда: для продуктов без известного
+  // ГИ принимаем средневзвешенный ГИ остальных (доля покрытия — в giCoverage).
   total.gl = total.gi !== null ? (total.gi * total.carbs) / 100 : null;
+
+  const measured = Number(recipe.yieldGrams) > 0 ? Number(recipe.yieldGrams) : 0;
+  total.estimatedYield = estimatedYield;
+  total.yieldMeasured = measured > 0;
+  total.yieldGrams = measured || estimatedYield;
 
   const servings = parseServings(recipe.servings);
   total.servings = servings;
 
   if (servings > 0) {
     total.perServing = {
-      grams: total.grams / servings,
+      grams: total.yieldGrams / servings,
       kcal: total.kcal / servings,
       protein: total.protein / servings,
       fat: total.fat / servings,
@@ -186,11 +347,11 @@ function calcRecipe(recipe) {
     };
   }
 
-  total.per100g = total.grams > 0 ? {
-    kcal: total.kcal / total.grams * 100,
-    protein: total.protein / total.grams * 100,
-    fat: total.fat / total.grams * 100,
-    carbs: total.carbs / total.grams * 100
+  total.per100g = total.yieldGrams > 0 ? {
+    kcal: total.kcal / total.yieldGrams * 100,
+    protein: total.protein / total.yieldGrams * 100,
+    fat: total.fat / total.yieldGrams * 100,
+    carbs: total.carbs / total.yieldGrams * 100
   } : null;
 
   return { rows, total };

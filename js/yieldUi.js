@@ -54,17 +54,18 @@ function renderYield(recipe) {
   computeYield();
 }
 
-// По умолчанию считаем от продукта с наибольшими отходами — именно его
-// обычно покупают «грязным» (рыба, овощи). Если отходов нет — от порций.
+// По умолчанию считаем от главного продукта, который чистят: самого
+// тяжёлого среди ингредиентов с отходами (рыба, мясо, овощи) — его обычно
+// и покупают «грязным». Если отходов нет — от порций.
 function defaultYieldBase(recipe) {
   const { rows } = calcRecipe(recipe);
   let best = null;
-  let bestWaste = 0;
+  let bestGrams = 0;
   (recipe.ingredients || []).forEach((ing, i) => {
     const waste = ingredientWaste(ing, findProduct(ing.product));
-    if (rows[i].grams > 0 && waste > bestWaste) {
+    if (waste > 0 && rows[i].grams > bestGrams) {
       best = String(i);
-      bestWaste = waste;
+      bestGrams = rows[i].grams;
     }
   });
   if (best !== null) return best;
@@ -165,7 +166,10 @@ function computeYield() {
       summary += ` Получится около ${ruNum(out)} ${plural(Math.round(out), "порции", "порций", "порций")}.`;
     }
   }
-  summary += ` Всего продуктов в блюде — ${kg(total.grams * factor)} чистого веса.`;
+  summary += ` Всего продуктов в блюде — ${kg(total.grams * factor)} чистого веса`;
+  summary += total.method === "raw" && !total.yieldMeasured
+    ? "."
+    : `, готового блюда ${total.yieldMeasured ? "" : "≈ "}${kg(total.yieldGrams * factor)}.`;
   el("yieldSummary").textContent = summary;
 
   renderYieldTable(recipe, rows, factor, baseIndex);
