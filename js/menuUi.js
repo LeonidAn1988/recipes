@@ -328,7 +328,11 @@ function renderShoppingList(shopping) {
         const checkbox = document.createElement("input");
         checkbox.type = "checkbox";
         checkbox.checked = Boolean(planner.checked[entry.name]);
-        checkbox.addEventListener("change", () => setShoppingChecked(entry.name, checkbox.checked));
+        checkbox.addEventListener("change", () => {
+          // На месте, без перерисовки: строка не уезжает из-под пальца.
+          li.classList.toggle("bought", checkbox.checked);
+          setShoppingChecked(entry.name, checkbox.checked);
+        });
 
         const name = document.createElement("span");
         name.className = "shopping-name";
@@ -396,7 +400,6 @@ function setShoppingChecked(name, checked) {
   if (checked) planner.checked[name] = true;
   else delete planner.checked[name];
   saveSection("planner", planner);
-  renderMenuView();
 }
 
 function togglePantry(name, add) {
@@ -423,9 +426,9 @@ function renderTemplates() {
         <div class="bottle-facts">${esc(names.join(", ") || "рецепты удалены")}</div>
       </div>
       <div class="bottle-actions">
-        <button type="button" class="btn btn-secondary btn-small" data-tpl="load" data-id="${t.id}">Загрузить</button>
+        <button type="button" class="btn btn-secondary btn-small" data-tpl="load" data-id="${t.id}">Заменить меню</button>
         <button type="button" class="btn btn-secondary btn-small" data-tpl="add" data-id="${t.id}">Добавить к меню</button>
-        <button type="button" class="btn-icon" data-tpl="del" data-id="${t.id}" aria-label="Удалить шаблон">✕</button>
+        <button type="button" class="btn-icon" data-tpl="del" data-id="${t.id}" aria-label="Удалить шаблон «${esc(t.name)}»">✕</button>
       </div>
     </li>`;
   }).join("") : `<li class="hint">Шаблонов пока нет.</li>`;
@@ -442,10 +445,16 @@ function onTemplateAction(e) {
     if (!confirm(`Удалить шаблон «${t.name}»?`)) return;
     planner.templates = planner.templates.filter(x => x.id !== t.id);
     saveSection("planner", planner);
+  } else if (!valid.length) {
+    alert(`Все рецепты шаблона «${t.name}» удалены из книги — загружать нечего.`);
+    return;
   } else if (btn.dataset.tpl === "load") {
     if (menuItems.length && !confirm(`Заменить текущее меню шаблоном «${t.name}»?`)) return;
     menuItems = valid.map(i => ({ ...i }));
     saveMenu(menuItems);
+    planner.checked = {};
+    saveSection("planner", planner);
+    if (valid.length < t.items.length) alert(`Пропущено удалённых рецептов: ${t.items.length - valid.length}.`);
   } else {
     valid.forEach(i => {
       const existing = menuItems.find(m => m.recipeId === i.recipeId);

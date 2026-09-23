@@ -20,7 +20,8 @@ function initTimers() {
   const bar = document.createElement("div");
   bar.id = "timerBar";
   bar.className = "timer-bar hidden";
-  bar.setAttribute("aria-live", "polite");
+  bar.setAttribute("role", "region");
+  bar.setAttribute("aria-label", "Таймеры");
   bar.addEventListener("click", onTimerBarClick);
   document.body.appendChild(bar);
   // Звук в браузере разрешён только после действия пользователя — готовим
@@ -28,6 +29,14 @@ function initTimers() {
   document.addEventListener("pointerdown", unlockAudio, { once: true });
   renderTimers();
   if (timers.length) startTicking();
+  // В фоновой вкладке интервалы замедляются — при возврате сразу проверяем.
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") tickTimers();
+  });
+  // Таймеры, запущенные в другой вкладке, подхватываем.
+  window.addEventListener("storage", e => {
+    if (e.key === TIMERS_KEY) { loadTimers(); renderTimers(); if (timers.length) startTicking(); }
+  });
 }
 
 function unlockAudio() {
@@ -51,25 +60,39 @@ function startTimer(label, minutes) {
 
 function startTicking() {
   if (timerTick) return;
-  timerTick = setInterval(() => {
-    let changed = false;
-    timers.forEach(t => {
-      if (!t.done && t.pausedLeft === null && Date.now() >= t.endsAt) {
-        t.done = true;
-        changed = true;
-        ring(t);
-      }
-    });
-    if (changed) saveTimers();
-    renderTimers();
-    if (!timers.length) {
-      clearInterval(timerTick);
-      timerTick = null;
-    }
-  }, 1000);
+  timerTick = setInterval(tickTimers, 1000);
 }
 
-function ring(t) {
+// Раз в секунду: обновляем цифры, а сработавшие таймеры звенят каждые
+// 8 секунд, пока их не выключат — одиночный сигнал на кухне легко пропустить.
+function tickTimers() {
+  let structural = false;
+  const now = Date.now();
+  timers.forEach(t => {
+    if (!t.done && t.pausedLeft === null && now >= t.endsAt) {
+      t.done = true;
+      t.lastRing = 0;
+      structural = true;
+      announce(`Готово: ${t.label}`);
+    }
+    if (t.done && now - (t.lastRing || 0) >= 8000) {
+      t.lastRing = now;
+      ring();
+    }
+  });
+  if (structural) {
+    saveTimers();
+    renderTimers();
+  } else {
+    updateTimerClocks();
+  }
+  if (!timers.length) {
+    clearInterval(timerTick);
+    timerTick = null;
+  }
+}
+
+function ring() {
   if (navigator.vibrate) navigator.vibrate([400, 200, 400, 200, 400]);
   try {
     unlockAudio();
@@ -88,7 +111,6 @@ function ring(t) {
       });
     }
   } catch {}
-  announce(`Готово: ${t.label}`);
 }
 
 function timerLeft(t) {
@@ -105,19 +127,38 @@ function clock(ms) {
   return (h ? h + ":" : "") + mm + ":" + String(sec).padStart(2, "0");
 }
 
+// Перестраиваем плашку только при добавлении, удалении или смене состояния
+// таймера: так не слетает фокус с кнопок и не теряются нажатия.
 function renderTimers() {
   const bar = el("timerBar");
   if (!bar) return;
   bar.classList.toggle("hidden", timers.length === 0);
   bar.classList.toggle("timer-ringing", timers.some(t => t.done));
+  const focused = document.activeElement && bar.contains(document.activeElement)
+    ? { id: document.activeElement.dataset.id, act: document.activeElement.dataset.timer } : null;
   bar.innerHTML = timers.map(t => `
-    <div class="timer${t.done ? " timer-done" : ""}">
+    <div class="timer${t.done ? " timer-done" : ""}" data-timer-id="${t.id}">
       <span class="timer-clock">${t.done ? "Готово!" : clock(timerLeft(t))}</span>
       <span class="timer-label">${esc(t.label)}</span>
-      ${t.done ? "" : `<button type="button" class="btn-icon" data-timer="${t.pausedLeft !== null ? "resume" : "pause"}" data-id="${t.id}" aria-label="${t.pausedLeft !== null ? "Продолжить" : "Пауза"}">${t.pausedLeft !== null ? "▶" : "⏸"}</button>
-      <button type="button" class="btn-icon" data-timer="plus" data-id="${t.id}" aria-label="Добавить минуту">+1</button>`}
-      <button type="button" class="btn-icon" data-timer="close" data-id="${t.id}" aria-label="${t.done ? "Выключить таймер" : "Отменить таймер"}">✕</button>
+      ${t.done ? "" : `<button type="button" class="btn-icon timer-btn" data-timer="${t.pausedLeft !== null ? "resume" : "pause"}" data-id="${t.id}" aria-label="${t.pausedLeft !== null ? "Продолжить" : "Пауза"}: ${esc(t.label)}">${t.pausedLeft !== null ? "▶" : "⏸"}</button>
+      <button type="button" class="btn-icon timer-btn" data-timer="plus" data-id="${t.id}" aria-label="Добавить минуту: ${esc(t.label)}">+1</button>`}
+      <button type="button" class="btn-icon timer-btn" data-timer="close" data-id="${t.id}" aria-label="${t.done ? "Выключить" : "Отменить"}: ${esc(t.label)}">✕</button>
     </div>`).join("");
+  if (focused) {
+    const again = bar.querySelector(`[data-id="${focused.id}"][data-timer="${focused.act}"]`) || bar.querySelector(`[data-id="${focused.id}"]`);
+    if (again) again.focus();
+  }
+  // Высота плашки — чтобы низ страницы и режима готовки не прятался под ней.
+  document.body.style.setProperty("--timers-h", timers.length ? bar.offsetHeight + 16 + "px" : "0px");
+}
+
+function updateTimerClocks() {
+  const bar = el("timerBar");
+  if (!bar) return;
+  timers.forEach(t => {
+    const clockEl = bar.querySelector(`[data-timer-id="${t.id}"] .timer-clock`);
+    if (clockEl && !t.done) clockEl.textContent = clock(timerLeft(t));
+  });
 }
 
 function onTimerBarClick(e) {

@@ -19,6 +19,10 @@ ok("время: 5 минут", A.stepMinutes({ text: "варить 5 минут"
 ok("время: 35–40 минут → 35", A.stepMinutes({ text: "Выпекать 35–40 минут" }) === 35);
 ok("время: 1,5 часа → 90", A.stepMinutes({ text: "тушить 1,5 часа" }) === 90);
 ok("время: секунды не таймер", A.stepMinutes({ text: "прогреть 30 секунд" }) === 0);
+ok("время: «1 ч. л. соли» — не таймер", A.stepMinutes({ text: "Добавить 1 ч. л. соли" }) === 0);
+ok("время: «2 ч.л.» — не таймер", A.stepMinutes({ text: "всыпать 2 ч.л. сахара" }) === 0);
+ok("время: 1 час 30 минут → 90", A.stepMinutes({ text: "Варить 1 час 30 минут" }) === 90);
+ok("время: 1 ч → 60", A.stepMinutes({ text: "Томить 1 ч" }) === 60);
 ok("время: поле важнее текста", A.stepMinutes({ text: "5 минут", minutes: 12 }) === 12);
 const steps = [{ minutes: 10 }, { kind: "heat", method: "stew", minutes: 25 }, { minutes: 15, parallel: true }, { kind: "heat", method: "stew", minutes: 50 }];
 ok("общее время 10 + max(25,15) + 50 = 85", A.stepsTimeline(steps).total === 85);

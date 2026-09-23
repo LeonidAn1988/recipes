@@ -249,9 +249,14 @@ function ingredientsInStep(text, ingredients) {
 // таймер лучше пусть позовёт проверить готовность пораньше.
 function stepMinutes(step) {
   if (Number(step.minutes) > 0) return Number(step.minutes);
-  const t = norm(step.text).replace(/,/g, ".");
-  const m = t.match(/(\d+(?:\.\d+)?)\s*(?:[–—-]\s*\d+(?:\.\d+)?\s*)?(мин|час|ч(?![а-я]))/);
-  if (!m) return 0;
-  const n = Number(m[1]);
-  return m[2].startsWith("мин") ? Math.round(n) : Math.round(n * 60);
+  // «ч. л.» и «ч.л.» — чайная ложка, а не час.
+  const t = norm(step.text).replace(/,/g, ".").replace(/ч\.?\s*л\.?/g, " ложк ");
+  const num = "(\\d+(?:\\.\\d+)?)(?:\\s*[–—-]\\s*\\d+(?:\\.\\d+)?)?";
+  const hours = t.match(new RegExp(num + "\\s*(?:час|ч(?![а-я]))"));
+  const mins = t.match(new RegExp(num + "\\s*мин"));
+  let total = 0;
+  if (hours) total += Number(hours[1]) * 60;
+  // «1 час 30 минут» — складываем; одни минуты — как есть.
+  if (mins) total += Number(mins[1]);
+  return Math.round(total);
 }

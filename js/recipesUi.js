@@ -57,11 +57,11 @@ function initRecipesUi() {
     const text = el("memberNote").value;
     noteTimer = setTimeout(() => {
       saveMemberNote(recipeId, text);
-      el("memberNoteHint").textContent = "Сохранено. Видно только вам.";
+      el("memberNoteHint").textContent = "Сохранено.";
     }, 700);
   });
-  el("memberNote").addEventListener("focus", () => {
-    if (!currentMember()) openSettings("Чтобы вести свои заметки, выберите, кто вы, или добавьте своё имя.");
+  el("noteWhoBtn").addEventListener("click", () => {
+    openSettings("Чтобы вести свои заметки, выберите, кто вы, или добавьте своё имя.");
   });
   el("cookBtn").addEventListener("click", () => {
     const recipe = recipes.find(r => r.id === selectedId);
@@ -496,7 +496,7 @@ function renderSteps(recipe) {
         time.dataset.stepTimer = i;
         time.textContent = `⏱ ${mins} мин`;
         time.title = "Запустить таймер";
-        time.setAttribute("aria-label", `Запустить таймер на ${mins} минут`);
+        time.setAttribute("aria-label", `Запустить таймер на ${mins} ${plural(mins, "минуту", "минуты", "минут")}`);
         side.appendChild(time);
       }
       li.appendChild(side);
@@ -683,7 +683,8 @@ function renderDetail() {
   el("detailTitle").textContent = recipe.title;
   const cs = cookState(recipe.id);
   const started = cs.steps.length || cs.ings.length;
-  el("cookBtn").textContent = started && (recipe.steps || []).length ? `🍳 Продолжить (шаг ${Math.min(cs.step + 1, recipe.steps.length)})` : "🍳 Готовить";
+  el("cookBtn").textContent = cs.finished ? "🍳 Готовить снова"
+    : started && (recipe.steps || []).length ? `🍳 Продолжить (шаг ${Math.min(cs.step + 1, recipe.steps.length)})` : "🍳 Готовить";
   const fav = isFavorite(recipe.id);
   el("favoriteBtn").textContent = fav ? "★ В избранном" : "☆ В избранное";
   el("favoriteBtn").classList.toggle("is-fav", fav);
@@ -719,8 +720,9 @@ function renderDetail() {
   renderYield(recipe);
   const me = currentMember();
   el("memberNote").value = memberNote(recipe.id);
-  el("memberNote").readOnly = !me;
-  el("memberNoteHint").textContent = me ? `Видны только вам (${me.name}) и сохраняются сами.` : "Выберите в настройках, кто вы, — и здесь можно будет писать свои заметки.";
+  el("memberNote").classList.toggle("hidden", !me);
+  el("noteWhoBtn").classList.toggle("hidden", Boolean(me));
+  el("memberNoteHint").textContent = me ? "Заметки видны только вам и сохраняются автоматически." : "Заметки у каждого члена семьи свои — сначала выберите, кто вы.";
 }
 
 // Теги в карточке кликабельны: нажатие показывает все рецепты с этим тегом.

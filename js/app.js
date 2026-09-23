@@ -281,6 +281,20 @@ function onModalKeydown(e) {
   }
 }
 
+// Перечитывает книгу из хранилища после прихода свежей версии из облака —
+// без перезагрузки страницы, чтобы не терять раздел, прокрутку и таймеры.
+function reloadAppState() {
+  recipes = loadRecipes();
+  menuItems = loadMenu();
+  // Читаем без записи: запись пометила бы книгу изменённой и вернула её в облако.
+  customProducts = readJson(STORAGE_KEYS.products, []);
+  PRODUCTS = buildProducts();
+  if (!recipes.some(r => r.id === selectedId)) selectedId = null;
+  if (typeof updateProfileChip === "function") updateProfileChip();
+  if (typeof initThemes === "function") initThemes();
+  render();
+}
+
 function closeAnyModal() {
   visibleModals().forEach(m => closeModal(m, true));
 }

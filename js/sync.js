@@ -115,15 +115,35 @@ async function pushToCloud() {
 
 // Сверяет локальную книгу с облачной. Если в облаке свежее — забирает её и
 // перезагружает страницу, чтобы все разделы перечитали данные.
+// Пока человек вводит текст или готовит по шагам, свежую книгу не
+// подменяем — проверим позже, при следующем возврате во вкладку.
+function syncBusy() {
+  const a = document.activeElement;
+  const typing = a && (/^(input|textarea|select)$/i.test(a.tagName)) && a.type !== "checkbox";
+  const cooking = typeof cook !== "undefined" && cook;
+  return Boolean(typing || cooking);
+}
+
 async function pullFromCloud() {
   if (!syncConfigured()) return;
+  if (syncBusy()) return;
   try {
     const book = await readGistBook(await gh("/gists/" + localStorage.getItem(SYNC_KEYS.gistId)));
     const localAt = localStorage.getItem(SYNC_KEYS.updatedAt);
 
     if (book && (!localAt || book.updatedAt > localAt)) {
+      if (syncBusy()) return;
+      const hadLocal = Boolean(localStorage.getItem(SYNC_KEYS.dirty));
+      const localPlanner = JSON.parse(localStorage.getItem(STORAGE_KEYS.planner) || "null");
       applyCloudBook(book);
-      location.reload();
+      // Отметки «куплено» и кладовую объединяем: двое могли отмечать разом.
+      if (hadLocal && localPlanner && mergePlanner(localPlanner)) {
+        localStorage.setItem(SYNC_KEYS.dirty, "1");
+        setTimeout(pushToCloud, 500);
+      }
+      if (typeof reloadAppState === "function") reloadAppState();
+      else location.reload();
+      setSyncState("ok");
       return;
     }
     if (localStorage.getItem(SYNC_KEYS.dirty) || !book) await pushToCloud();
@@ -132,6 +152,20 @@ async function pullFromCloud() {
     console.warn("Облачное сохранение:", e);
     setSyncState("error", e.message);
   }
+}
+
+// Сливает локальные отметки и кладовую в только что пришедшие из облака.
+// Возвращает true, если что-то добавилось (тогда нужно отправить обратно).
+function mergePlanner(local) {
+  const cloud = JSON.parse(localStorage.getItem(STORAGE_KEYS.planner) || "null") || { checked: {}, pantry: [], templates: [] };
+  const before = JSON.stringify(cloud);
+  cloud.checked = { ...(cloud.checked || {}), ...(local.checked || {}) };
+  cloud.pantry = [...new Set([...(cloud.pantry || []), ...(local.pantry || [])])];
+  const ids = new Set((cloud.templates || []).map(t => t.id));
+  cloud.templates = [...(cloud.templates || []), ...(local.templates || []).filter(t => !ids.has(t.id))];
+  if (JSON.stringify(cloud) === before) return false;
+  localStorage.setItem(STORAGE_KEYS.planner, JSON.stringify(cloud));
+  return true;
 }
 
 function applyCloudBook(book) {

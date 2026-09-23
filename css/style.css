@@ -1798,3 +1798,15 @@ button.step-time:hover { border-color: var(--accent-ink); color: var(--accent-in
   font: inherit;
   resize: vertical;
 }
+
+/* Плашка таймеров не закрывает низ страницы и режима готовки. */
+body { padding-bottom: var(--timers-h, 0px); }
+.cook-body { padding-bottom: calc(1rem + var(--timers-h, 0px)); }
+
+/* Цели нажатия (WCAG 2.5.8): не меньше 24 px; в режиме готовки и на плашке
+   таймеров — 44 px, под мокрые руки. */
+.btn-icon { min-width: 24px; min-height: 24px; }
+button.step-time { min-height: 24px; }
+.cook .btn-icon, .timer-btn { min-width: 44px; min-height: 44px; font-size: 1rem; }
+.cook-tabs button { min-height: 44px; }
+.cook-check { min-height: 44px; }
