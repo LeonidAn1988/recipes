@@ -42,6 +42,7 @@ function readJson(key, fallback) {
 function writeJson(key, value) {
   try {
     localStorage.setItem(key, JSON.stringify(value));
+    if (typeof noteLocalChange === "function") noteLocalChange(key);
     return true;
   } catch {
     alert(

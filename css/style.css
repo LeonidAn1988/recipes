@@ -891,3 +891,8 @@ body {
   .data-table th { position: static; }
   .shopping-list { grid-template-columns: repeat(2, 1fr); }
 }
+
+.btn.sync-error {
+  color: var(--danger);
+  border-color: var(--danger);
+}
