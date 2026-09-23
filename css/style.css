@@ -1522,3 +1522,11 @@ textarea { border-color: var(--input-border) !important; }
 .maker-video summary { cursor: pointer; color: var(--accent-ink); }
 .maker-video .video-wrap { margin-top: 0.4rem; }
 .bottle-main .video-wrap { max-width: 480px; }
+
+/* Фильтр калорий: подпись — отдельной строкой, поля «от» и «до» делят ширину
+   поровну и не вылезают за боковую панель; стрелки-счётчики не нужны. */
+.kcal-filter-row { flex-wrap: wrap; row-gap: 0.3rem; }
+.kcal-filter-label { flex-basis: 100%; margin-right: 0; }
+.kcal-input { flex: 1 1 0; min-width: 0; width: auto; -moz-appearance: textfield; appearance: textfield; }
+.kcal-input::-webkit-outer-spin-button,
+.kcal-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
