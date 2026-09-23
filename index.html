@@ -20,7 +20,7 @@
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="css/style.css?v=20260924012152">
+<link rel="stylesheet" href="css/style.css?v=20260924012748">
 </head>
 <body>
 
@@ -205,6 +205,7 @@
 
         <section class="detail-section">
           <h3>Приготовление</h3>
+          <p class="hint steps-summary hidden" id="detailStepsSummary"></p>
           <ol id="detailSteps" class="steps-list"></ol>
         </section>
 
@@ -361,7 +362,10 @@
 
       <div class="form-row">
         <label>Способ приготовления
-          <select id="formMethod"></select>
+          <span class="method-row">
+            <select id="formMethod"></select>
+            <button type="button" id="methodFromSteps" class="btn btn-secondary btn-small" title="Взять способ самого долгого шага термообработки">По шагам</button>
+          </span>
         </label>
         <label>Выход готового блюда, г
           <input type="text" id="formYield" inputmode="decimal" autocomplete="off" placeholder="если взвесили">
@@ -563,22 +567,23 @@
 <datalist id="productCategoriesList"></datalist>
 <datalist id="recipeCategoriesList"></datalist>
 
-<script src="js/products.js?v=20260924012152"></script>
-<script src="js/store.js?v=20260924012152"></script>
-<script src="js/themes.js?v=20260924012152"></script>
-<script src="js/profiles.js?v=20260924012152"></script>
-<script src="js/sync.js?v=20260924012152"></script>
-<script src="js/nutrition.js?v=20260924012152"></script>
-<script src="js/recipes.js?v=20260924012152"></script>
-<script src="js/app.js?v=20260924012152"></script>
-<script src="js/recipesUi.js?v=20260924012152"></script>
-<script src="js/yieldUi.js?v=20260924012152"></script>
-<script src="js/productsUi.js?v=20260924012152"></script>
-<script src="js/tinctureCalc.js?v=20260924012152"></script>
-<script src="js/tinctureUi.js?v=20260924012152"></script>
-<script src="js/canningData.js?v=20260924012152"></script>
-<script src="js/canningCalc.js?v=20260924012152"></script>
-<script src="js/canningUi.js?v=20260924012152"></script>
-<script src="js/menuUi.js?v=20260924012152"></script>
+<script src="js/products.js?v=20260924012748"></script>
+<script src="js/store.js?v=20260924012748"></script>
+<script src="js/themes.js?v=20260924012748"></script>
+<script src="js/profiles.js?v=20260924012748"></script>
+<script src="js/sync.js?v=20260924012748"></script>
+<script src="js/nutrition.js?v=20260924012748"></script>
+<script src="js/recipes.js?v=20260924012748"></script>
+<script src="js/app.js?v=20260924012748"></script>
+<script src="js/stepsMeta.js?v=20260924012748"></script>
+<script src="js/recipesUi.js?v=20260924012748"></script>
+<script src="js/yieldUi.js?v=20260924012748"></script>
+<script src="js/productsUi.js?v=20260924012748"></script>
+<script src="js/tinctureCalc.js?v=20260924012748"></script>
+<script src="js/tinctureUi.js?v=20260924012748"></script>
+<script src="js/canningData.js?v=20260924012748"></script>
+<script src="js/canningCalc.js?v=20260924012748"></script>
+<script src="js/canningUi.js?v=20260924012748"></script>
+<script src="js/menuUi.js?v=20260924012748"></script>
 </body>
 </html>

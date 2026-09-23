@@ -35,6 +35,15 @@ function initRecipesUi() {
   el("formImage").addEventListener("input", syncImagePreview);
   el("formTags").addEventListener("input", renderTagSuggest);
   COOKING_METHODS.forEach(m => el("formMethod").appendChild(new Option(m.label, m.id)));
+  el("methodFromSteps").addEventListener("click", () => {
+    const method = cookingMethodFromSteps(collectSteps());
+    if (method) {
+      el("formMethod").value = method;
+      announce("Способ приготовления: " + methodLabel(method));
+    } else {
+      alert("В шагах нет термообработки с указанным способом. Отметьте у шага этап «Термообработка» и выберите способ.");
+    }
+  });
   el("formYield").addEventListener("input", () => {
     const v = el("formYield").value.trim();
     const bad = v !== "" && !(parseAmount(v) > 0);
@@ -426,14 +435,77 @@ function renderIngredientsTable(recipe, rows, total) {
 function renderSteps(recipe) {
   const stepsEl = el("detailSteps");
   stepsEl.innerHTML = "";
+  const steps = recipe.steps || [];
 
-  (recipe.steps || []).forEach(step => {
+  const summary = el("detailStepsSummary");
+  const t = stepsTimeline(steps);
+  summary.textContent = t.total > 0
+    ? `Всего ≈ ${t.total} мин` + (t.heat ? `, из них термообработка — ${t.heat} мин` : "") +
+      (t.known < steps.length ? " (у части шагов время не указано)" : "") + "."
+    : "";
+  summary.classList.toggle("hidden", !t.total);
+
+  const anyMeta = steps.some(st => st.kind || st.minutes);
+  stepsEl.classList.toggle("steps-with-icons", anyMeta);
+
+  steps.forEach((step, i) => {
     const li = document.createElement("li");
-    li.className = "step-item";
+    li.className = "step-item" + (step.parallel ? " step-parallel" : "");
+
+    // Слева — иконка действия и время (если у шагов есть суть).
+    if (anyMeta) {
+      const side = document.createElement("div");
+      side.className = "step-side";
+      const icon = stepIcon(step);
+      if (icon) {
+        const ic = document.createElement("span");
+        ic.className = "step-icon";
+        ic.textContent = icon;
+        ic.setAttribute("aria-hidden", "true");
+        side.appendChild(ic);
+      }
+      if (step.minutes) {
+        const time = document.createElement("span");
+        time.className = "step-time";
+        time.textContent = `${step.minutes} мин`;
+        side.appendChild(time);
+      }
+      li.appendChild(side);
+    }
+
+    const body = document.createElement("div");
+    body.className = "step-body";
+    li.appendChild(body);
+
+    if (step.kind || step.parallel) {
+      const tags = document.createElement("div");
+      tags.className = "step-tags";
+      if (step.kind) {
+        const kind = document.createElement("span");
+        kind.className = "step-kind step-kind-" + step.kind;
+        kind.textContent = labelOf(STEP_KINDS, step.kind);
+        tags.appendChild(kind);
+      }
+      if (step.parallel && i > 0) {
+        const par = document.createElement("span");
+        par.className = "step-par";
+        par.textContent = `одновременно с шагом ${i}`;
+        tags.appendChild(par);
+      }
+      body.appendChild(tags);
+    }
 
     const text = document.createElement("div");
     text.textContent = step.text;
-    li.appendChild(text);
+    body.appendChild(text);
+
+    const line = stepMetaLine(step);
+    if (line) {
+      const meta = document.createElement("div");
+      meta.className = "step-meta-line";
+      meta.textContent = line;
+      body.appendChild(meta);
+    }
 
     if (step.image) {
       const img = document.createElement("img");
@@ -441,7 +513,7 @@ function renderSteps(recipe) {
       img.src = step.image;
       img.alt = "";
       img.loading = "lazy";
-      li.appendChild(img);
+      body.appendChild(img);
     }
     stepsEl.appendChild(li);
   });
@@ -884,7 +956,7 @@ function addStepRow(step = { text: "", image: "" }) {
   syncPreview();
 
   media.append(imageInput, fileInput);
-  row.append(header, textarea, media, preview);
+  row.append(header, textarea, stepMetaEditor(step), media, preview);
   el("formSteps").appendChild(row);
   renumberSteps();
 }
@@ -898,7 +970,8 @@ function renumberSteps() {
 function collectSteps() {
   return [...el("formSteps").querySelectorAll(".step-row")].map(row => ({
     text: row.querySelector(".step-text").value.trim(),
-    image: row.querySelector(".step-image-url").value.trim()
+    image: row.querySelector(".step-image-url").value.trim(),
+    ...readStepMeta(row)
   })).filter(s => s.text);
 }
 
