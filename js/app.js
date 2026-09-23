@@ -160,6 +160,7 @@ function init() {
 function closeAnyModal() {
   el("recipeModal").classList.add("hidden");
   el("productModal").classList.add("hidden");
+  el("syncModal").classList.add("hidden");
 }
 
 document.addEventListener("DOMContentLoaded", init);

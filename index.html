@@ -383,6 +383,32 @@
   </div>
 </div>
 
+<div id="syncModal" class="modal hidden">
+  <div class="modal-content modal-narrow">
+    <h2>Облачное сохранение</h2>
+    <form id="syncForm">
+      <p>Книга будет храниться в вашем GitHub (секретный Gist) и синхронизироваться между устройствами. Для этого нужен токен GitHub.</p>
+      <ol class="sync-steps">
+        <li><a id="syncTokenLink" href="https://github.com/settings/tokens/new?scopes=gist&amp;description=%D0%A0%D0%B5%D1%86%D0%B5%D0%BF%D1%82%D1%8B" target="_blank" rel="noopener">Откройте страницу создания токена на GitHub</a> и войдите в аккаунт, если попросит.</li>
+        <li>В поле «Expiration» выберите «No expiration». Галочка «gist» уже стоит.</li>
+        <li>Нажмите «Generate token» внизу страницы и скопируйте токен.</li>
+        <li>Вернитесь сюда и вставьте токен в поле ниже.</li>
+      </ol>
+      <p class="hint">Если токен уже создан на другом устройстве — просто вставьте тот же токен.</p>
+
+      <label>Токен GitHub
+        <input type="text" id="syncToken" required autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="ghp_…">
+      </label>
+
+      <div class="modal-actions">
+        <span class="spacer"></span>
+        <button type="button" id="cancelSyncBtn" class="btn btn-secondary">Отмена</button>
+        <button type="submit" id="submitSyncBtn" class="btn btn-primary">Подключить</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <datalist id="productsList"></datalist>
 <datalist id="productCategoriesList"></datalist>
 <datalist id="recipeCategoriesList"></datalist>

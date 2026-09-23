@@ -682,7 +682,8 @@ body {
 .modal-content h2 { margin-top: 0; }
 
 #recipeForm > label,
-#productForm > label {
+#productForm > label,
+#syncForm > label {
   display: block;
   font-size: 0.85rem;
   color: var(--text-muted);
@@ -693,7 +694,8 @@ body {
 #recipeForm textarea,
 #recipeForm select,
 #productForm input,
-#productForm select {
+#productForm select,
+#syncForm input {
   width: 100%;
   margin-top: 0.3rem;
   padding: 0.5rem 0.65rem;
@@ -896,3 +898,10 @@ body {
   color: var(--danger);
   border-color: var(--danger);
 }
+
+.sync-steps {
+  padding-left: 1.2rem;
+  line-height: 1.5;
+}
+.sync-steps li { margin-bottom: 0.4rem; }
+.sync-steps a { color: var(--accent); font-weight: 600; }

@@ -20,7 +20,6 @@ const SYNCED_KEYS = [STORAGE_KEYS.recipes, STORAGE_KEYS.products, STORAGE_KEYS.m
 
 const GIST_FILE = "recipes-book.json";
 const GIST_DESCRIPTION = "Книга рецептов — облачное сохранение";
-const TOKEN_URL = "https://github.com/settings/tokens/new?scopes=gist&description=" + encodeURIComponent("Рецепты");
 
 let pushTimer = null;
 let syncState = "off"; // off | ok | pending | error
@@ -143,23 +142,25 @@ function applyCloudBook(book) {
 
 // --- Подключение ---
 
-async function connectCloud() {
-  if (!confirm(
-    "Облачное сохранение хранит книгу в вашем GitHub (секретный Gist) и синхронизирует её между устройствами.\n\n" +
-    "Понадобится токен GitHub с правом «gist». «ОК» — открыть страницу создания токена: " +
-    "там выберите срок «No expiration», нажмите «Generate token» и скопируйте его."
-  )) return;
-  window.open(TOKEN_URL, "_blank");
+// Окно подключения: ссылка на создание токена — обычная ссылка, по которой
+// нажимает сам пользователь, иначе Safari блокирует открытие как всплывающее окно.
+function openSyncModal() {
+  document.getElementById("syncToken").value = "";
+  document.getElementById("syncModal").classList.remove("hidden");
+}
 
-  const token = (prompt("Вставьте токен GitHub (начинается с ghp_):") || "").trim();
-  if (!token) return;
+function closeSyncModal() {
+  document.getElementById("syncModal").classList.add("hidden");
+}
+
+async function connectCloud(token) {
   localStorage.setItem(SYNC_KEYS.token, token);
-
   setSyncState("pending");
   try {
     const existing = await findExistingGist();
     if (existing) {
       localStorage.setItem(SYNC_KEYS.gistId, existing);
+      closeSyncModal();
       await pullFromCloud();
       return;
     }
@@ -177,6 +178,7 @@ async function connectCloud() {
     localStorage.setItem(SYNC_KEYS.gistId, gist.id);
     localStorage.removeItem(SYNC_KEYS.dirty);
     setSyncState("ok");
+    closeSyncModal();
     alert("Готово: книга сохранена в облаке. На другом устройстве нажмите «Облако» и вставьте тот же токен.");
   } catch (e) {
     localStorage.removeItem(SYNC_KEYS.token);
@@ -186,9 +188,21 @@ async function connectCloud() {
   }
 }
 
+async function handleSyncSubmit(e) {
+  e.preventDefault();
+  const token = document.getElementById("syncToken").value.trim();
+  if (!token) return;
+  const btn = document.getElementById("submitSyncBtn");
+  btn.disabled = true;
+  btn.textContent = "Подключаю…";
+  await connectCloud(token);
+  btn.disabled = false;
+  btn.textContent = "Подключить";
+}
+
 function handleSyncClick() {
   if (!syncConfigured()) {
-    connectCloud();
+    openSyncModal();
     return;
   }
   if (syncState === "error" && confirm("Последнее сохранение в облако не удалось. Повторить сейчас?")) {
@@ -214,6 +228,11 @@ function setSyncState(state, message) {
 
 function initSync() {
   document.getElementById("syncBtn").addEventListener("click", handleSyncClick);
+  document.getElementById("syncForm").addEventListener("submit", handleSyncSubmit);
+  document.getElementById("cancelSyncBtn").addEventListener("click", closeSyncModal);
+  document.getElementById("syncModal").addEventListener("click", e => {
+    if (e.target.id === "syncModal") closeSyncModal();
+  });
   setSyncState(syncConfigured() ? "pending" : "off");
 
   // Браузер может стереть данные сайта; просим оставить их.
