@@ -58,6 +58,7 @@ function initTincturesUi() {
       </div>
       <label>Как готовить <textarea id="tnSteps" rows="4" placeholder="По шагам: что нарезать, где настаивать, как процедить"></textarea></label>
       <label>Заметки <textarea id="tnNotes" rows="2" placeholder="Вкус, что поменять в следующий раз"></textarea></label>
+      <label>Видео <input type="text" id="tnVideo" autocomplete="off" placeholder="Ссылка на YouTube, Rutube, VK Видео или .mp4"></label>
       <div class="modal-actions">
         <span class="spacer"></span>
         <button type="button" class="btn btn-secondary" data-close>Отмена</button>
@@ -170,6 +171,17 @@ function renderTincturesView() {
 
   updateDiluteCalc();
   updateMixCalc();
+  mountVideos(el("tincturesPage"), id => data.recipes.find(r => r.id === id));
+}
+
+// Подставляет плееры в заготовки data-video-for после отрисовки раздела.
+function mountVideos(root, findItem) {
+  root.querySelectorAll("[data-video-for]").forEach(slot => {
+    const item = findItem(slot.dataset.videoFor);
+    const block = item && buildVideoBlock(item.video, item.title || item.product);
+    if (block) slot.appendChild(block);
+    else slot.remove();
+  });
 }
 
 function bottleItem(b, today) {
@@ -211,6 +223,7 @@ function tinctureRecipeItem(r) {
       ${r.sugar ? `<p>Сахар: ${esc(formatAmount(r.sugar))} г</p>` : ""}
       ${r.steps ? `<p class="tn-steps">${esc(r.steps)}</p>` : ""}
       ${r.notes ? `<p class="hint">${esc(r.notes)}</p>` : ""}
+      ${r.video ? `<div class="tn-video" data-video-for="${r.id}"></div>` : ""}
       <div class="chip-row">
         <button type="button" class="btn btn-primary btn-small" data-act="bottle-from" data-id="${r.id}">Заложить по рецепту</button>
         <button type="button" class="btn btn-secondary btn-small" data-act="edit-recipe" data-id="${r.id}">Изменить</button>
@@ -356,6 +369,7 @@ function openTinctureForm(recipe) {
   el("tnRest").value = r.restDays ?? "";
   el("tnSteps").value = r.steps || "";
   el("tnNotes").value = r.notes || "";
+  el("tnVideo").value = r.video || "";
   (r.ingredients && r.ingredients.length ? r.ingredients : [undefined]).forEach(i => addTinctureIngredientRow(i));
   openModal(el("tinctureModal"));
 }
@@ -380,6 +394,7 @@ function saveTinctureRecipe(e) {
     restDays: Math.round(num("tnRest")),
     steps: el("tnSteps").value.trim(),
     notes: el("tnNotes").value.trim(),
+    video: el("tnVideo").value.trim(),
     updatedAt: new Date().toISOString()
   };
   const data = loadSection("tinctures");

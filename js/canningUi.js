@@ -42,9 +42,14 @@ function initCanningUi() {
     const minutes = Math.round(parseAmount(val("minutes")));
     if (!(temp > 0) || !(minutes > 0)) return;
     const modes = canningSettings().makerModes;
-    modes.push({ id: newId("mm"), product: val("product"), jar: val("jar"), temp, minutes, note: val("note") });
+    const entry = { product: val("product"), jar: val("jar"), temp, minutes, note: val("note"), video: val("video") };
+    const existing = modes.find(m => m.id === f.dataset.editId);
+    if (existing) Object.assign(existing, entry);
+    else modes.push({ id: newId("mm"), ...entry });
     saveCanningSettings({ makerModes: modes });
     f.reset();
+    f.dataset.editId = "";
+    f.querySelector('[type="submit"]').textContent = "Добавить режим";
     renderMakerModes();
   });
   el("canningPage").addEventListener("toggle", e => {
@@ -144,6 +149,7 @@ function renderCanningView() {
           <label>Температура, °C <input type="text" inputmode="decimal" name="temp" required placeholder="120"></label>
           <label>Время выдержки, мин <input type="text" inputmode="numeric" name="minutes" required placeholder="60"></label>
           <label class="span-2">Заметка <input type="text" name="note" placeholder="страница инструкции, особые условия"></label>
+          <label class="span-2">Видео <input type="text" name="video" autocomplete="off" placeholder="Ссылка на YouTube, Rutube, VK Видео или .mp4"></label>
         </div>
         <button type="submit" class="btn btn-secondary btn-small">Добавить режим</button>
       </form>
@@ -182,12 +188,15 @@ function renderMakerModes() {
         <span class="bottle-title">${esc(m.product)}</span>
         <span class="stage">по данным производителя</span>
         <div class="bottle-facts">${esc(m.jar)} · <strong>${esc(formatAmount(m.temp))} °C</strong> · <strong>${esc(m.minutes)} мин</strong> выдержки${m.note ? " · " + esc(m.note) : ""}</div>
+        ${m.video ? `<details class="maker-video"><summary>Видео</summary><div data-video-for="${m.id}"></div></details>` : ""}
       </div>
       <div class="bottle-actions">
         <button type="button" class="btn btn-secondary btn-small" data-act="log-maker" data-id="${m.id}">Записать партию</button>
+        <button type="button" class="btn btn-secondary btn-small" data-act="edit-maker" data-id="${m.id}">Изменить</button>
         <button type="button" class="btn-icon" data-act="del-maker" data-id="${m.id}" aria-label="Удалить режим" title="Удалить режим">✕</button>
       </div>
     </li>`).join("")}</ul>` : `<p class="hint">Пока режимов нет.</p>`;
+  mountVideos(box, id => modes.find(m => m.id === id));
 }
 
 function currentCanningMode() {
@@ -432,6 +441,19 @@ function onCanningClick(e) {
     if (!m || !confirm(`Удалить режим «${m.product}, ${m.jar}»?`)) return;
     saveCanningSettings({ makerModes: modes.filter(x => x.id !== m.id) });
     return renderMakerModes();
+  }
+  if (btn.dataset.act === "edit-maker") {
+    const m = canningSettings().makerModes.find(x => x.id === btn.dataset.id);
+    const f = el("makerForm");
+    if (!m) return;
+    ["product", "jar", "note", "video"].forEach(n => { f.querySelector(`[name="${n}"]`).value = m[n] || ""; });
+    f.querySelector('[name="temp"]').value = formatAmount(m.temp, false);
+    f.querySelector('[name="minutes"]').value = m.minutes;
+    f.dataset.editId = m.id;
+    f.querySelector('[type="submit"]').textContent = "Сохранить режим";
+    f.scrollIntoView({ block: "nearest" });
+    f.querySelector('[name="product"]').focus();
+    return;
   }
   if (btn.dataset.act === "log-maker") {
     const m = canningSettings().makerModes.find(x => x.id === btn.dataset.id);

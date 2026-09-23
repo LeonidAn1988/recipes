@@ -491,27 +491,19 @@ function isDirectVideoFile(url) {
   return /\.(mp4|webm|mov|m4v|ogg)(\?|#|$)/i.test(url);
 }
 
-function renderVideo(recipe) {
-  const section = el("videoSection");
-  const wrap = el("videoWrap");
-  wrap.innerHTML = "";
-  wrap.classList.remove("video-link-only");
-
-  if (!recipe.video) {
-    section.classList.add("hidden");
-    return;
-  }
-  section.classList.remove("hidden");
-
-  const url = extractVideoUrl(recipe.video);
-  // Книга синхронизируется между устройствами: чужая ссылка вида
-  // javascript:… не должна исполниться. Пропускаем только http(s).
+// Строит блок видео: плеер YouTube / Rutube / VK, <video> для файла или
+// кнопку-ссылку для остальных хостингов. Книга синхронизируется между
+// устройствами, поэтому чужая ссылка вида javascript:… не должна исполниться —
+// пропускаем только http(s). Возвращает элемент .video-wrap или null.
+function buildVideoBlock(rawUrl, title) {
+  if (!rawUrl) return null;
+  const url = extractVideoUrl(rawUrl);
   let safe = false;
   try { safe = ["http:", "https:"].includes(new URL(url).protocol); } catch {}
-  if (!safe) {
-    section.classList.add("hidden");
-    return;
-  }
+  if (!safe) return null;
+
+  const wrap = document.createElement("div");
+  wrap.className = "video-wrap";
   const embed = videoEmbedUrl(url);
   if (embed) {
     const iframe = document.createElement("iframe");
@@ -520,7 +512,7 @@ function renderVideo(recipe) {
     iframe.allowFullscreen = true;
     iframe.loading = "lazy";
     iframe.referrerPolicy = "strict-origin-when-cross-origin";
-    iframe.title = "Видео: " + recipe.title;
+    iframe.title = "Видео: " + title;
     wrap.appendChild(iframe);
   } else if (isDirectVideoFile(url)) {
     const video = document.createElement("video");
@@ -540,6 +532,17 @@ function renderVideo(recipe) {
     a.textContent = "Открыть видео ↗";
     wrap.appendChild(a);
   }
+  return wrap;
+}
+
+function renderVideo(recipe) {
+  const section = el("videoSection");
+  const slot = el("videoWrap");
+  const block = buildVideoBlock(recipe.video, recipe.title);
+  section.classList.toggle("hidden", !block);
+  slot.innerHTML = "";
+  slot.className = "";
+  if (block) slot.appendChild(block);
 }
 
 function renderDetail() {
