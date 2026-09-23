@@ -715,6 +715,10 @@ body {
 
 #recipeForm > label,
 #recipeForm .form-row > label,
+#tinctureForm > label,
+#tinctureForm .form-row > label,
+#bottleForm > label,
+#bottleForm .form-row > label,
 #productForm > label,
 #syncForm > label {
   display: block;
@@ -728,7 +732,12 @@ body {
 #recipeForm select,
 #productForm input,
 #productForm select,
-#syncForm input {
+#syncForm input,
+#tinctureForm input,
+#tinctureForm textarea,
+#tinctureForm select,
+#bottleForm input,
+#bottleForm textarea {
   width: 100%;
   margin-top: 0.3rem;
   padding: 0.5rem 0.65rem;
@@ -1320,4 +1329,99 @@ html[data-theme="oldbook"] .btn { border-radius: 2px; }
 @media (max-width: 760px) {
   /* В колонку flex-basis заголовка становится высотой — отключаем. */
   .detail-header h2 { flex: none; width: 100%; }
+}
+
+/* ───────── Настойки ───────── */
+
+.tn-section { margin-top: 1.8rem; }
+.tn-section > h3 { font-family: var(--font-display); margin: 0 0 0.7rem; }
+.notice {
+  padding: 0.7rem 0.9rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface-alt);
+  margin: 0.8rem 0 0;
+}
+.notice-warn { border-color: var(--level-medium); background: color-mix(in srgb, var(--level-medium) 12%, var(--surface)); }
+.bottle-list, .tn-recipes { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; }
+.bottle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.bottle-finished { opacity: 0.62; }
+.bottle-main { min-width: 0; flex: 1 1 16rem; }
+.bottle-title { font-weight: 600; margin-right: 0.4rem; }
+.bottle-facts, .bottle-notes { font-size: 0.82rem; color: var(--text-muted); margin-top: 0.2rem; }
+.bottle-actions { display: flex; gap: 0.35rem; align-items: center; }
+.stage {
+  display: inline-block;
+  font-size: 0.72rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  vertical-align: 0.1em;
+}
+.stage-strain-due { border-color: var(--level-medium); color: var(--level-medium); font-weight: 600; }
+.stage-ready { border-color: var(--level-low); color: var(--level-low); font-weight: 600; }
+.stage-resting { color: var(--accent-ink); border-color: var(--accent-ink); }
+.tn-recipe { border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
+.tn-recipe-head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  width: 100%;
+  padding: 0.7rem 0.9rem;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.tn-recipe-title { font-weight: 600; }
+.tn-recipe-meta { font-size: 0.82rem; color: var(--text-muted); }
+.tn-details { padding: 0 0.9rem 0.9rem; }
+.tn-ings { margin: 0 0 0.6rem; padding-left: 1.1rem; }
+.tn-steps { white-space: pre-line; }
+.calc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 0.8rem; }
+.calc-card {
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.calc-card h4 { margin: 0 0 0.7rem; font-size: 0.95rem; }
+.calc-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.5rem 0.7rem; }
+.calc-fields label { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.78rem; color: var(--text-muted); }
+.calc-fields input {
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.95rem;
+}
+.calc-result { font-size: 1rem; margin: 0.8rem 0 0.4rem; line-height: 1.45; }
+#tnIngredients .tn-ing-amount { width: 5rem; }
+@media (max-width: 760px) {
+  #tnIngredients tr {
+    display: grid;
+    grid-template-columns: auto 1fr 1fr auto;
+    gap: 0.35rem;
+    padding: 0.4rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+  #tnIngredients td { padding: 0; }
+  #tnIngredients td.drag-cell { grid-row: span 2; display: flex; align-items: center; }
+  #tnIngredients td:nth-child(2) { grid-column: 2 / -1; }
+  #tnIngredients .tn-ing-amount { width: 100%; }
 }
