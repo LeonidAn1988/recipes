@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Рецепты">
+<title>Рецепты — книга рецептов</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="app-header">
+  <h1>📖 Рецепты</h1>
+
+  <nav class="app-nav" id="appNav">
+    <button type="button" class="nav-btn active" data-view="recipes">Рецепты</button>
+    <button type="button" class="nav-btn" data-view="products">Продукты</button>
+    <button type="button" class="nav-btn" data-view="menu">Меню</button>
+  </nav>
+
+  <div class="header-actions">
+    <button id="exportBtn" class="btn btn-secondary btn-small" title="Скачать книгу одним JSON-файлом">Экспорт</button>
+    <button id="importBtn" class="btn btn-secondary btn-small" title="Загрузить книгу из JSON-файла">Импорт</button>
+    <input type="file" id="importFile" accept="application/json,.json" hidden>
+  </div>
+</header>
+
+<!-- ───────────────────────── Рецепты ───────────────────────── -->
+
+<section id="view-recipes" class="view">
+  <div class="app-layout">
+
+    <aside class="sidebar">
+      <button id="addRecipeBtn" class="btn btn-primary btn-block">+ Новый рецепт</button>
+
+      <input type="search" id="searchInput" placeholder="Поиск по названию и ингредиентам" class="search-input">
+
+      <div class="category-filters" id="categoryFilters"></div>
+
+      <ul id="recipeList" class="recipe-list"></ul>
+      <p class="list-empty hidden" id="recipeListEmpty">Ничего не найдено.</p>
+    </aside>
+
+    <main class="content">
+      <div id="emptyState" class="empty-state">
+        <p>Выберите рецепт слева или добавьте новый.</p>
+      </div>
+
+      <article id="recipeDetail" class="recipe-detail hidden">
+        <div class="detail-header">
+          <h2 id="detailTitle"></h2>
+          <div class="detail-actions">
+            <button id="addToMenuBtn" class="btn btn-secondary">В меню</button>
+            <button id="printRecipeBtn" class="btn btn-secondary">Печать</button>
+            <button id="editRecipeBtn" class="btn btn-secondary">Изменить</button>
+            <button id="deleteRecipeBtn" class="btn btn-danger">Удалить</button>
+          </div>
+        </div>
+
+        <img id="detailImage" class="detail-image hidden" alt="">
+
+        <div class="detail-meta">
+          <span id="detailCategory" class="badge"></span>
+          <span id="detailTime" class="badge"></span>
+          <span id="detailServings" class="badge"></span>
+        </div>
+
+        <section class="detail-section">
+          <h3>Пищевая ценность</h3>
+
+          <div class="nutrition-summary" id="nutritionSummary"></div>
+
+          <div class="glycemic-block">
+            <div class="glycemic-card">
+              <div class="glycemic-label">Гликемический индекс блюда</div>
+              <div class="glycemic-value" id="giValue">—</div>
+              <div class="glycemic-note" id="giNote"></div>
+            </div>
+            <div class="glycemic-card">
+              <div class="glycemic-label">Гликемическая нагрузка (порция)</div>
+              <div class="glycemic-value" id="glValue">—</div>
+              <div class="glycemic-note" id="glNote"></div>
+            </div>
+          </div>
+
+          <details class="formula-details">
+            <summary>Как считается</summary>
+            <ul class="formula-list">
+              <li><strong>Калорийность</strong> — коэффициенты Атуотера: белки × 4 + жиры × 9 + углеводы × 4 ккал/г.</li>
+              <li><strong>ГИ блюда</strong> — средневзвешенное по вкладу углеводов: Σ(ГИ ингредиента × его углеводы) ÷ Σ(углеводы). Учитываются только продукты с известным ГИ.</li>
+              <li><strong>Гликемическая нагрузка</strong> — ГН = ГИ × углеводы (г) ÷ 100. Считается на одну порцию.</li>
+              <li>Шкала ГИ: низкий ≤ 55, средний 56–69, высокий ≥ 70. Шкала ГН на порцию: низкая ≤ 10, средняя 11–19, высокая ≥ 20.</li>
+              <li>Значения ориентировочные: реальный отклик зависит от сорта, обработки и сочетания продуктов — жиры и белки в блюде замедляют усвоение углеводов.</li>
+            </ul>
+          </details>
+        </section>
+
+        <section class="detail-section">
+          <h3>Ингредиенты</h3>
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Название</th>
+                  <th class="num">Кол-во</th>
+                  <th>Ед. изм.</th>
+                  <th class="num">Грамм</th>
+                  <th class="num">Ккал</th>
+                  <th class="num">Б</th>
+                  <th class="num">Ж</th>
+                  <th class="num">У</th>
+                  <th class="num">ГИ</th>
+                </tr>
+              </thead>
+              <tbody id="detailIngredients"></tbody>
+              <tfoot id="detailIngredientsFoot"></tfoot>
+            </table>
+          </div>
+        </section>
+
+        <section class="detail-section">
+          <h3>Приготовление</h3>
+          <ol id="detailSteps" class="steps-list"></ol>
+        </section>
+
+        <section class="detail-section hidden" id="videoSection">
+          <h3>Видео приготовления</h3>
+          <div class="video-wrap" id="videoWrap"></div>
+        </section>
+      </article>
+
+    </main>
+  </div>
+</section>
+
+<!-- ───────────────────────── Продукты ───────────────────────── -->
+
+<section id="view-products" class="view hidden">
+  <div class="page">
+    <div class="page-head">
+      <h2>База продуктов</h2>
+      <button id="addProductBtn" class="btn btn-primary">+ Новый продукт</button>
+    </div>
+
+    <p class="hint">
+      Значения указаны на 100 г. Встроенные продукты менять нельзя, но кнопка «Изменить»
+      создаёт вашу копию с тем же названием — она перекроет встроенную во всех рецептах.
+      Свои продукты выгружаются вместе с книгой в «Экспорте».
+    </p>
+
+    <div class="filters-row">
+      <input type="search" id="productSearch" class="search-input" placeholder="Поиск продукта...">
+      <select id="productCategoryFilter" class="select-input"></select>
+      <label class="checkbox-label">
+        <input type="checkbox" id="productOnlyCustom"> Только свои
+      </label>
+    </div>
+
+    <div class="table-scroll">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Название</th>
+            <th>Категория</th>
+            <th class="num">Ккал</th>
+            <th class="num">Б</th>
+            <th class="num">Ж</th>
+            <th class="num">У</th>
+            <th class="num">ГИ</th>
+            <th>Свои единицы</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="productsTableBody"></tbody>
+      </table>
+    </div>
+    <p class="list-empty hidden" id="productsEmpty">Ничего не найдено.</p>
+  </div>
+</section>
+
+<!-- ───────────────────────── Меню ───────────────────────── -->
+
+<section id="view-menu" class="view hidden">
+  <div class="page">
+    <div class="page-head">
+      <h2>Меню и список покупок</h2>
+      <div class="detail-actions">
+        <button id="printMenuBtn" class="btn btn-secondary">Печать</button>
+        <button id="clearMenuBtn" class="btn btn-danger">Очистить</button>
+      </div>
+    </div>
+
+    <div class="menu-add">
+      <select id="menuRecipeSelect" class="select-input"></select>
+      <button id="menuAddBtn" class="btn btn-primary">Добавить в меню</button>
+    </div>
+
+    <div id="menuEmpty" class="empty-state">
+      <p>Меню пустое. Добавьте блюда — соберётся список покупок и общие БЖУ.</p>
+    </div>
+
+    <div id="menuBody" class="hidden">
+      <section class="detail-section">
+        <h3>Блюда</h3>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Блюдо</th>
+                <th class="num">Порций</th>
+                <th class="num">Ккал</th>
+                <th class="num">Б</th>
+                <th class="num">Ж</th>
+                <th class="num">У</th>
+                <th class="num">ГН</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="menuItemsBody"></tbody>
+            <tfoot id="menuItemsFoot"></tfoot>
+          </table>
+        </div>
+      </section>
+
+      <section class="detail-section">
+        <h3>Итого за день</h3>
+        <div class="nutrition-summary" id="menuSummary"></div>
+      </section>
+
+      <section class="detail-section">
+        <h3>Список покупок</h3>
+        <div id="shoppingList" class="shopping-list"></div>
+        <p class="hint" id="shoppingHint"></p>
+      </section>
+    </div>
+  </div>
+</section>
+
+<!-- ───────────────────────── Модалка рецепта ───────────────────────── -->
+
+<div id="recipeModal" class="modal hidden">
+  <div class="modal-content">
+    <h2 id="modalTitle">Новый рецепт</h2>
+    <form id="recipeForm">
+      <input type="hidden" id="recipeId">
+
+      <label>Название
+        <input type="text" id="formTitle" required>
+      </label>
+
+      <label>Категория
+        <input type="text" id="formCategory" list="recipeCategoriesList" placeholder="например, Десерты" required>
+      </label>
+
+      <div class="form-row">
+        <label>Время приготовления
+          <input type="text" id="formTime" placeholder="например, 30 мин">
+        </label>
+        <label>Порций
+          <input type="text" id="formServings" placeholder="например, 4">
+        </label>
+      </div>
+
+      <fieldset class="form-block">
+        <legend>Фото готового блюда</legend>
+        <div class="media-input">
+          <input type="url" id="formImage" placeholder="Ссылка https://... или загрузите файл">
+          <input type="file" id="formImageFile" accept="image/*" class="file-input">
+        </div>
+        <img id="formImagePreview" class="media-preview hidden" alt="">
+      </fieldset>
+
+      <fieldset class="form-block">
+        <legend>Видео приготовления</legend>
+        <input type="url" id="formVideo" placeholder="Ссылка на YouTube или .mp4">
+      </fieldset>
+
+      <fieldset class="form-block">
+        <legend>Ингредиенты</legend>
+        <div class="table-scroll">
+          <table class="form-table">
+            <thead>
+              <tr>
+                <th>Название</th>
+                <th class="col-amount">Кол-во</th>
+                <th class="col-unit">Ед. изм.</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="formIngredients"></tbody>
+          </table>
+        </div>
+        <button type="button" id="addIngredientBtn" class="btn btn-secondary btn-small">+ Ингредиент</button>
+        <p class="hint">Выберите продукт из базы, чтобы посчитались БЖУ и ГИ. Своё название тоже можно ввести — тогда оно попадёт в список без расчёта, а добавить его в базу можно в разделе «Продукты».</p>
+      </fieldset>
+
+      <fieldset class="form-block">
+        <legend>Шаги приготовления</legend>
+        <div id="formSteps"></div>
+        <button type="button" id="addStepBtn" class="btn btn-secondary btn-small">+ Шаг</button>
+      </fieldset>
+
+      <div class="modal-actions">
+        <button type="button" id="cancelModalBtn" class="btn btn-secondary">Отмена</button>
+        <button type="submit" class="btn btn-primary">Сохранить</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ───────────────────────── Модалка продукта ───────────────────────── -->
+
+<div id="productModal" class="modal hidden">
+  <div class="modal-content modal-narrow">
+    <h2 id="productModalTitle">Новый продукт</h2>
+    <form id="productForm">
+      <input type="hidden" id="productOriginalName">
+
+      <label>Название
+        <input type="text" id="productName" required placeholder="например, Творог 9% «Домик в деревне»">
+      </label>
+
+      <label>Категория
+        <input type="text" id="productCategory" list="productCategoriesList" required>
+      </label>
+
+      <fieldset class="form-block">
+        <legend>Пищевая ценность на 100 г</legend>
+        <div class="form-grid">
+          <label>Белки, г
+            <input type="number" id="productProtein" step="any" min="0" required>
+          </label>
+          <label>Жиры, г
+            <input type="number" id="productFat" step="any" min="0" required>
+          </label>
+          <label>Углеводы, г
+            <input type="number" id="productCarbs" step="any" min="0" required>
+          </label>
+          <label>Ккал
+            <input type="number" id="productKcal" step="any" min="0" required>
+          </label>
+        </div>
+        <p class="hint" id="atwaterHint"></p>
+      </fieldset>
+
+      <fieldset class="form-block">
+        <legend>Гликемический индекс</legend>
+        <div class="media-input">
+          <input type="number" id="productGi" step="1" min="0" max="150" placeholder="0–150">
+          <label class="checkbox-label">
+            <input type="checkbox" id="productNoGi"> ГИ не определяется
+          </label>
+        </div>
+        <p class="hint">Отметьте галочку для продуктов без значимого количества углеводов — масла, мяса, специй. Тогда продукт не будет влиять на ГИ блюда.</p>
+      </fieldset>
+
+      <fieldset class="form-block">
+        <legend>Свои единицы измерения</legend>
+        <table class="form-table">
+          <thead>
+            <tr>
+              <th>Единица</th>
+              <th class="col-amount">Грамм</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="productUnits"></tbody>
+        </table>
+        <button type="button" id="addUnitBtn" class="btn btn-secondary btn-small">+ Единица</button>
+        <p class="hint">Например, «шт» = 50 для яйца или «стакан» = 250 для молока. Граммы, ст.л., ч.л., щепотка и «по вкусу» доступны всегда.</p>
+      </fieldset>
+
+      <div class="modal-actions">
+        <button type="button" id="deleteProductBtn" class="btn btn-danger hidden">Удалить</button>
+        <span class="spacer"></span>
+        <button type="button" id="cancelProductBtn" class="btn btn-secondary">Отмена</button>
+        <button type="submit" class="btn btn-primary">Сохранить</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<datalist id="productsList"></datalist>
+<datalist id="productCategoriesList"></datalist>
+<datalist id="recipeCategoriesList"></datalist>
+
+<script src="js/products.js"></script>
+<script src="js/store.js"></script>
+<script src="js/nutrition.js"></script>
+<script src="js/recipes.js"></script>
+<script src="js/app.js"></script>
+<script src="js/recipesUi.js"></script>
+<script src="js/productsUi.js"></script>
+<script src="js/menuUi.js"></script>
+</body>
+</html>

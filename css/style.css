@@ -1,0 +1,893 @@
+:root {
+  --bg: #faf7f2;
+  --surface: #ffffff;
+  --surface-alt: #f4efe7;
+  --border: #e7ddd0;
+  --text: #2e2620;
+  --text-muted: #8a7f70;
+  --accent: #c9622f;
+  --accent-hover: #b0521f;
+  --danger: #c0392b;
+  --protein: #3d7ea6;
+  --fat: #d99b30;
+  --carbs: #6a9a52;
+  --level-low: #4c9a4c;
+  --level-medium: #d99b30;
+  --level-high: #cc4b37;
+  --radius: 10px;
+  --shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1c1815;
+    --surface: #262019;
+    --surface-alt: #2f2820;
+    --border: #3a3128;
+    --text: #f1ece4;
+    --text-muted: #a89a86;
+    --accent: #e2823f;
+    --accent-hover: #f0934f;
+    --danger: #e2564a;
+    --protein: #6fb3d9;
+    --fat: #edb75c;
+    --carbs: #8fc073;
+    --level-low: #6cbf6c;
+    --level-medium: #edb75c;
+    --level-high: #e8705c;
+    --shadow: 0 2px 10px rgba(0,0,0,0.35);
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* ───────── Шапка и навигация ───────── */
+
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 0.8rem 1.5rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 1.3rem;
+}
+
+.app-nav {
+  display: flex;
+  gap: 0.25rem;
+  background: var(--surface-alt);
+  border-radius: 999px;
+  padding: 0.2rem;
+}
+
+.nav-btn {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  font-family: inherit;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.nav-btn:hover { color: var(--text); }
+
+.nav-btn.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+.nav-badge {
+  display: inline-block;
+  min-width: 1.15rem;
+  padding: 0 0.3rem;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.28);
+  font-size: 0.72rem;
+  line-height: 1.15rem;
+  text-align: center;
+}
+
+.nav-btn:not(.active) .nav-badge {
+  background: var(--accent);
+  color: #fff;
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.4rem;
+  margin-left: auto;
+}
+
+/* ───────── Раскладка разделов ───────── */
+
+.app-layout {
+  display: flex;
+  min-height: calc(100vh - 61px);
+}
+
+.sidebar {
+  width: 300px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--border);
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.page {
+  padding: 1.5rem 2rem;
+  max-width: 1100px;
+}
+
+.page-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+
+.page-head h2 { margin: 0; }
+
+.filters-row {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 1rem 0;
+}
+
+.filters-row .search-input {
+  flex: 1;
+  min-width: 200px;
+  margin-bottom: 0;
+}
+
+.search-input,
+.select-input {
+  padding: 0.55rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.92rem;
+}
+
+.sidebar .search-input {
+  width: 100%;
+  margin-bottom: 0.75rem;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.checkbox-label input { margin: 0; }
+
+.category-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+}
+
+.chip {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+  font-family: inherit;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.chip.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.recipe-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.recipe-item {
+  padding: 0.7rem 0.8rem;
+  border-radius: var(--radius);
+  cursor: pointer;
+  margin-bottom: 0.3rem;
+}
+
+.recipe-item:hover { background: var(--surface); }
+
+.recipe-item.selected {
+  background: var(--accent);
+  color: #fff;
+}
+
+.recipe-item-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.recipe-item-category {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.recipe-item.selected .recipe-item-category {
+  color: #fff;
+  opacity: 0.85;
+}
+
+.list-empty {
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  text-align: center;
+  padding: 1rem 0;
+}
+
+.content {
+  flex: 1;
+  padding: 1.5rem 2rem;
+  overflow-y: auto;
+  min-width: 0;
+}
+
+.empty-state {
+  color: var(--text-muted);
+  text-align: center;
+  margin-top: 4rem;
+}
+
+.recipe-detail { max-width: 860px; }
+
+.detail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.detail-header h2 { margin: 0 0 0.5rem; }
+
+.detail-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.detail-image {
+  width: 100%;
+  max-height: 320px;
+  object-fit: cover;
+  border-radius: var(--radius);
+  margin: 1rem 0;
+}
+
+.detail-meta {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.badge {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+}
+
+.detail-section { margin-bottom: 2rem; }
+
+.detail-section h3 {
+  margin-bottom: 0.75rem;
+  color: var(--accent);
+}
+
+/* ───────── Пищевая ценность ───────── */
+
+.nutrition-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.nutrition-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.8rem 1rem;
+}
+
+.nutrition-card-title {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 0.35rem;
+}
+
+.nutrition-kcal {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.4rem;
+}
+
+.macro-row {
+  display: flex;
+  gap: 0.75rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.macro b { color: var(--text); font-weight: 600; }
+.macro-p { border-left: 3px solid var(--protein); padding-left: 0.35rem; }
+.macro-f { border-left: 3px solid var(--fat); padding-left: 0.35rem; }
+.macro-c { border-left: 3px solid var(--carbs); padding-left: 0.35rem; }
+
+.glycemic-block {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.glycemic-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.8rem 1rem;
+}
+
+.glycemic-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.glycemic-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.glycemic-value.level-low { color: var(--level-low); }
+.glycemic-value.level-medium { color: var(--level-medium); }
+.glycemic-value.level-high { color: var(--level-high); }
+.glycemic-value.level-none { color: var(--text-muted); }
+
+.glycemic-note {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.formula-details {
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.6rem 0.9rem;
+  font-size: 0.85rem;
+}
+
+.formula-details summary {
+  cursor: pointer;
+  color: var(--text-muted);
+}
+
+.formula-list {
+  margin: 0.6rem 0 0.2rem;
+  padding-left: 1.1rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+.formula-list strong { color: var(--text); }
+
+/* ───────── Таблицы ───────── */
+
+.table-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  background: var(--surface);
+}
+
+.data-table th,
+.data-table td {
+  padding: 0.5rem 0.7rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.data-table th {
+  background: var(--surface-alt);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+}
+
+.data-table td.num,
+.data-table th.num { text-align: right; }
+
+.data-table td.muted { color: var(--text-muted); }
+.data-table td.wrap { white-space: normal; min-width: 140px; }
+.data-table td.actions { text-align: right; }
+
+.data-table tbody tr:last-child td { border-bottom: none; }
+
+.data-table tfoot td {
+  background: var(--surface-alt);
+  font-weight: 700;
+  border-top: 2px solid var(--border);
+  border-bottom: none;
+}
+
+.row-unknown { color: var(--text-muted); }
+
+.tag {
+  display: inline-block;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.68rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  vertical-align: 1px;
+}
+
+/* ───────── Шаги ───────── */
+
+.steps-list {
+  padding-left: 1.2rem;
+  line-height: 1.7;
+  margin: 0;
+}
+
+.step-item { margin-bottom: 1rem; }
+
+.step-image {
+  display: block;
+  max-width: 340px;
+  width: 100%;
+  border-radius: var(--radius);
+  margin-top: 0.5rem;
+}
+
+/* ───────── Видео ───────── */
+
+.video-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+  aspect-ratio: 16 / 9;
+  background: #000;
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.video-wrap iframe,
+.video-wrap video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.hidden { display: none !important; }
+
+/* ───────── Меню и список покупок ───────── */
+
+.menu-add {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin: 1rem 0 1.5rem;
+}
+
+.menu-add .select-input {
+  flex: 1;
+  min-width: 240px;
+}
+
+.servings-input {
+  width: 74px;
+  padding: 0.25rem 0.4rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.88rem;
+  text-align: right;
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: var(--accent);
+  cursor: pointer;
+  text-align: left;
+}
+
+.link-btn:hover { text-decoration: underline; }
+
+.shopping-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.shopping-group {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.8rem 1rem;
+}
+
+.shopping-group h4 {
+  margin: 0 0 0.5rem;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.shopping-group ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.shopping-group li { padding: 0.15rem 0; }
+
+.shopping-group label {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.shopping-name { flex: 1; }
+
+.shopping-amount {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.shopping-group input:checked ~ .shopping-name,
+.shopping-group input:checked ~ .shopping-amount {
+  text-decoration: line-through;
+  opacity: 0.5;
+}
+
+/* ───────── Кнопки ───────── */
+
+.btn {
+  border: none;
+  border-radius: var(--radius);
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.btn-small {
+  padding: 0.35rem 0.8rem;
+  font-size: 0.82rem;
+  margin-top: 0.5rem;
+}
+
+.btn-inline { margin-top: 0; }
+
+.btn-block {
+  display: block;
+  width: 100%;
+  margin-bottom: 0.75rem;
+}
+
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: var(--accent-hover); }
+
+.btn-secondary {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.btn-secondary:hover { background: var(--bg); }
+
+.btn-danger {
+  background: transparent;
+  color: var(--danger);
+  border: 1px solid var(--danger);
+}
+.btn-danger:hover { background: var(--danger); color: #fff; }
+
+.btn-icon {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0.2rem 0.4rem;
+  border-radius: 6px;
+}
+.btn-icon:hover { color: var(--danger); background: var(--surface-alt); }
+
+/* ───────── Модалки ───────── */
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 10;
+}
+
+.modal-content {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  width: 100%;
+  max-width: 680px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow);
+}
+
+.modal-narrow { max-width: 520px; }
+
+.modal-content h2 { margin-top: 0; }
+
+#recipeForm > label,
+#productForm > label {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 0.9rem;
+}
+
+#recipeForm input,
+#recipeForm textarea,
+#recipeForm select,
+#productForm input,
+#productForm select {
+  width: 100%;
+  margin-top: 0.3rem;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.9rem;
+}
+
+#productForm .checkbox-label input {
+  width: auto;
+  margin-top: 0;
+}
+
+#recipeForm input.unknown-product { border-color: var(--fat); }
+
+.form-row { display: flex; gap: 1rem; }
+.form-row label { flex: 1; }
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 0.6rem;
+}
+
+.form-grid label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.form-block {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.9rem 1rem 1rem;
+  margin: 0 0 1rem;
+}
+
+.form-block legend {
+  font-size: 0.82rem;
+  color: var(--accent);
+  font-weight: 600;
+  padding: 0 0.4rem;
+}
+
+.form-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.form-table th {
+  text-align: left;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  padding: 0 0.3rem 0.3rem;
+}
+
+.form-table td {
+  padding: 0.15rem 0.3rem;
+  vertical-align: middle;
+}
+
+.form-table .col-amount { width: 90px; }
+.form-table .col-unit { width: 110px; }
+.form-table input,
+.form-table select { margin-top: 0; }
+
+.media-input {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.media-input input[type="url"] { flex: 1; min-width: 200px; }
+.media-input input[type="number"] { width: 120px; }
+
+.file-input {
+  width: auto !important;
+  font-size: 0.78rem !important;
+  padding: 0.3rem !important;
+  border: none !important;
+  background: transparent !important;
+}
+
+.media-preview {
+  max-width: 200px;
+  max-height: 130px;
+  border-radius: 8px;
+  margin-top: 0.5rem;
+  display: block;
+}
+
+.step-row {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.6rem 0.7rem;
+  margin-bottom: 0.6rem;
+  background: var(--bg);
+}
+
+.step-row-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.3rem;
+}
+
+.step-number {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.step-row textarea { margin-bottom: 0.4rem; }
+
+.hint {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin: 0.6rem 0 0;
+  line-height: 1.5;
+}
+
+.hint-warn { color: var(--level-high); }
+
+.modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-top: 0.5rem;
+}
+
+.modal-actions .spacer { flex: 1; }
+
+/* ───────── Мобильная вёрстка ───────── */
+
+@media (max-width: 760px) {
+  .app-header { padding: 0.7rem 1rem; gap: 0.6rem; }
+  .app-header h1 { font-size: 1.1rem; }
+  .header-actions { margin-left: 0; }
+  .app-nav { order: 3; width: 100%; justify-content: center; }
+  .app-layout { flex-direction: column; }
+  .sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+  .content { padding: 1rem; }
+  .page { padding: 1rem; }
+  .detail-header { flex-direction: column; }
+  .form-row { flex-direction: column; gap: 0; }
+  .shopping-list { grid-template-columns: 1fr; }
+}
+
+/* ───────── Печать ───────── */
+
+@media print {
+  :root {
+    --bg: #fff;
+    --surface: #fff;
+    --surface-alt: #f2f2f2;
+    --border: #bbb;
+    --text: #000;
+    --text-muted: #555;
+    --accent: #000;
+    --shadow: none;
+  }
+
+  .app-header,
+  .sidebar,
+  .detail-actions,
+  .page-head .btn,
+  .menu-add,
+  .filters-row,
+  .modal,
+  .formula-details,
+  #videoSection,
+  .empty-state,
+  .hint,
+  .shopping-group input[type="checkbox"] {
+    display: none !important;
+  }
+
+  body { background: #fff; }
+  .content, .page { padding: 0; max-width: none; }
+  .recipe-detail { max-width: none; }
+  .table-scroll { overflow: visible; }
+  .detail-section { break-inside: avoid; }
+  .step-item, .shopping-group, .nutrition-card { break-inside: avoid; }
+  .detail-image { max-height: 200px; }
+  .data-table th { position: static; }
+  .shopping-list { grid-template-columns: repeat(2, 1fr); }
+}
