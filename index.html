@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Рецепты">
 <title>Рецепты — книга рецептов</title>
-<link rel="stylesheet" href="css/style.css?v=20260923231535">
+<link rel="stylesheet" href="css/style.css?v=20260924000206">
 </head>
 <body>
 
@@ -18,13 +18,14 @@
     <button type="button" class="nav-btn active" data-view="recipes">Рецепты</button>
     <button type="button" class="nav-btn" data-view="products">Продукты</button>
     <button type="button" class="nav-btn" data-view="menu">Меню</button>
+    <button type="button" class="nav-btn" data-view="tinctures">Настойки</button>
+    <button type="button" class="nav-btn" data-view="canning">Автоклав</button>
   </nav>
 
   <div class="header-actions">
-    <button id="syncBtn" class="btn btn-secondary btn-small">Облако: выкл</button>
-    <button id="exportBtn" class="btn btn-secondary btn-small" title="Скачать книгу одним JSON-файлом">Экспорт</button>
-    <button id="importBtn" class="btn btn-secondary btn-small" title="Загрузить книгу из JSON-файла">Импорт</button>
-    <input type="file" id="importFile" accept="application/json,.json" hidden>
+    <button id="profileChip" type="button" class="btn btn-secondary btn-small profile-chip" title="Кто пользуется книгой на этом устройстве">Кто я?</button>
+    <button id="syncBtn" type="button" class="btn btn-secondary btn-small">Облако: выкл</button>
+    <button id="settingsBtn" type="button" class="btn btn-secondary btn-small" aria-label="Настройки" title="Настройки">⚙</button>
   </div>
 </header>
 
@@ -64,6 +65,7 @@
         <div class="detail-header">
           <h2 id="detailTitle"></h2>
           <div class="detail-actions">
+            <button id="favoriteBtn" class="btn btn-secondary">☆ В избранное</button>
             <button id="addToMenuBtn" class="btn btn-secondary">В меню</button>
             <button id="printRecipeBtn" class="btn btn-secondary">Печать</button>
             <button id="editRecipeBtn" class="btn btn-secondary">Изменить</button>
@@ -249,6 +251,14 @@
 
 <!-- ───────────────────────── Меню ───────────────────────── -->
 
+<section id="view-tinctures" class="view hidden">
+  <div class="page" id="tincturesPage"></div>
+</section>
+
+<section id="view-canning" class="view hidden">
+  <div class="page" id="canningPage"></div>
+</section>
+
 <section id="view-menu" class="view hidden">
   <div class="page">
     <div class="page-head">
@@ -356,7 +366,8 @@
 
       <fieldset class="form-block">
         <legend>Видео приготовления</legend>
-        <input type="url" id="formVideo" placeholder="Ссылка на YouTube или .mp4">
+        <input type="text" id="formVideo" autocomplete="off" placeholder="Ссылка на YouTube, Rutube, VK Видео или .mp4">
+        <p class="hint">Снимите видео на телефон → загрузите на YouTube, Rutube или VK Видео с доступом «по ссылке» (видно только тем, у кого есть ссылка) → вставьте ссылку сюда. Видео хранится на хостинге, в книге — только ссылка, поэтому его увидит вся семья. Для закрытых видео VK вставьте код из «Поделиться → Экспортировать».</p>
       </fieldset>
 
       <fieldset class="form-block">
@@ -495,19 +506,62 @@
   </div>
 </div>
 
+<div id="settingsModal" class="modal hidden">
+  <div class="modal-content modal-narrow">
+    <h2>Настройки</h2>
+
+    <section class="settings-block">
+      <h3>Кто я на этом устройстве</h3>
+      <div class="chip-row" id="memberList"></div>
+      <form id="addMemberForm" class="inline-form">
+        <input type="text" id="newMemberName" maxlength="30" autocomplete="off" placeholder="Новое имя, например «Оля»">
+        <button type="submit" class="btn btn-secondary btn-small">Добавить</button>
+      </form>
+      <p class="hint">У каждого члена семьи своё избранное. Список имён и избранное хранятся в общей книге и синхронизируются через облако; выбор «кто я» — только на этом устройстве.</p>
+    </section>
+
+    <section class="settings-block hidden" id="themeBlock">
+      <h3>Оформление</h3>
+      <div class="theme-grid" id="themeList"></div>
+      <p class="hint">Тема выбирается на каждом устройстве отдельно.</p>
+    </section>
+
+    <section class="settings-block">
+      <h3>Книга</h3>
+      <div class="chip-row">
+        <button id="exportBtn" type="button" class="btn btn-secondary btn-small" title="Скачать книгу одним JSON-файлом">Экспорт в файл</button>
+        <button id="importBtn" type="button" class="btn btn-secondary btn-small" title="Загрузить книгу из JSON-файла">Импорт из файла</button>
+        <input type="file" id="importFile" accept="application/json,.json" hidden>
+      </div>
+      <p class="hint">Файл — резервная копия всей книги: рецепты, свои продукты, настойки, журнал автоклава, имена и избранное.</p>
+    </section>
+
+    <div class="modal-actions">
+      <span class="spacer"></span>
+      <button type="button" id="closeSettingsBtn" class="btn btn-primary">Готово</button>
+    </div>
+  </div>
+</div>
+
 <datalist id="productsList"></datalist>
 <datalist id="productCategoriesList"></datalist>
 <datalist id="recipeCategoriesList"></datalist>
 
-<script src="js/products.js?v=20260923231535"></script>
-<script src="js/store.js?v=20260923231535"></script>
-<script src="js/sync.js?v=20260923231535"></script>
-<script src="js/nutrition.js?v=20260923231535"></script>
-<script src="js/recipes.js?v=20260923231535"></script>
-<script src="js/app.js?v=20260923231535"></script>
-<script src="js/recipesUi.js?v=20260923231535"></script>
-<script src="js/yieldUi.js?v=20260923231535"></script>
-<script src="js/productsUi.js?v=20260923231535"></script>
-<script src="js/menuUi.js?v=20260923231535"></script>
+<script src="js/products.js?v=20260924000206"></script>
+<script src="js/store.js?v=20260924000206"></script>
+<script src="js/profiles.js?v=20260924000206"></script>
+<script src="js/sync.js?v=20260924000206"></script>
+<script src="js/nutrition.js?v=20260924000206"></script>
+<script src="js/recipes.js?v=20260924000206"></script>
+<script src="js/app.js?v=20260924000206"></script>
+<script src="js/recipesUi.js?v=20260924000206"></script>
+<script src="js/yieldUi.js?v=20260924000206"></script>
+<script src="js/productsUi.js?v=20260924000206"></script>
+<script src="js/tinctureCalc.js?v=20260924000206"></script>
+<script src="js/tinctureUi.js?v=20260924000206"></script>
+<script src="js/canningData.js?v=20260924000206"></script>
+<script src="js/canningCalc.js?v=20260924000206"></script>
+<script src="js/canningUi.js?v=20260924000206"></script>
+<script src="js/menuUi.js?v=20260924000206"></script>
 </body>
 </html>

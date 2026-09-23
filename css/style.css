@@ -1114,3 +1114,52 @@ body.is-dragging * { cursor: grabbing !important; user-select: none; -webkit-use
 
 .nutrition-note { grid-column: 1 / -1; margin: 0.2rem 0 0; }
 .form-hint { margin: -0.4rem 0 0.9rem; }
+
+.video-wrap.video-link-only {
+  aspect-ratio: auto;
+  background: transparent;
+  overflow: visible;
+}
+
+/* ───────── Профили, избранное, настройки ───────── */
+
+.profile-chip-empty { border-style: dashed; }
+.chip-fav.active { background: #d9a520; border-color: #d9a520; color: #1c1917; }
+.fav-mark { color: #d9a520; }
+#favoriteBtn.is-fav { color: #b8860b; border-color: #d9a520; }
+.settings-block { margin-bottom: 1.3rem; }
+.settings-block h3 { font-size: 0.95rem; margin: 0 0 0.6rem; }
+.settings-message {
+  background: var(--surface-alt);
+  border-left: 3px solid var(--accent);
+  padding: 0.6rem 0.8rem;
+  border-radius: var(--radius);
+}
+.chip-row { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; }
+.member-item { display: inline-flex; align-items: center; gap: 0.1rem; }
+.inline-form { display: flex; gap: 0.4rem; margin-top: 0.6rem; }
+.inline-form input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--text);
+  font-family: inherit;
+}
+
+/* Шапка: на телефоне вкладки прокручиваются вбок, а не переносятся. */
+@media (max-width: 760px) {
+  .app-nav {
+    justify-content: flex-start;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .app-nav::-webkit-scrollbar { display: none; }
+  .nav-btn { flex: 0 0 auto; }
+  .header-actions { flex-wrap: wrap; }
+}
+#settingsBtn { font-size: 1.05rem; line-height: 1; padding-left: 0.6rem; padding-right: 0.6rem; }
+.placeholder-page { color: var(--text-muted); padding: 2rem 0; }

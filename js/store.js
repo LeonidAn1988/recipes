@@ -10,8 +10,34 @@ const STORAGE_KEYS = {
   recipes: "recipes.data",
   products: "recipes.products",
   menu: "recipes.menu",
-  seeded: "recipes.seeded"
+  seeded: "recipes.seeded",
+  tinctures: "recipes.tinctures",
+  canning: "recipes.canning",
+  profiles: "recipes.profiles"
 };
+
+// Разделы книги кроме рецептов: настойки, автоклав, профили семьи.
+// Хранятся объектами целиком; значение по умолчанию — пустая структура.
+const SECTION_DEFAULTS = {
+  tinctures: () => ({ recipes: [], bottles: [] }),
+  canning: () => ({ batches: [], settings: {} }),
+  profiles: () => ({ members: [], favorites: {} })
+};
+
+function loadSection(name) {
+  const stored = readJson(STORAGE_KEYS[name], null);
+  const base = SECTION_DEFAULTS[name]();
+  return stored && typeof stored === "object" && !Array.isArray(stored) ? { ...base, ...stored } : base;
+}
+
+function saveSection(name, data) {
+  return writeJson(STORAGE_KEYS[name], data);
+}
+
+// Уникальный id для записей журналов и профилей.
+function newId(prefix) {
+  return prefix + "-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 7);
+}
 
 const EXPORT_FORMAT = "recipes-book";
 const EXPORT_VERSION = 1;
@@ -149,7 +175,10 @@ function buildExport(recipesList) {
     version: EXPORT_VERSION,
     exportedAt: new Date().toISOString(),
     recipes: recipesList,
-    customProducts
+    customProducts,
+    tinctures: loadSection("tinctures"),
+    canning: loadSection("canning"),
+    profiles: loadSection("profiles")
   };
 }
 
@@ -196,10 +225,45 @@ function parseImport(text) {
     throw new Error("В файле не нашлось ни одного рецепта с названием и ингредиентами.");
   }
 
+  const section = v => (v && typeof v === "object" && !Array.isArray(v) ? v : null);
   return {
     recipes,
-    customProducts: (Array.isArray(data.customProducts) ? data.customProducts : []).filter(isValidProduct)
+    customProducts: (Array.isArray(data.customProducts) ? data.customProducts : []).filter(isValidProduct),
+    // Разделы появились позже — в старых файлах их нет, это нормально.
+    tinctures: section(data.tinctures),
+    canning: section(data.canning),
+    profiles: section(data.profiles)
   };
+}
+
+// Объединяет списки записей по id: записи, которых ещё нет, добавляются.
+function mergeById(current = [], incoming = []) {
+  const ids = new Set(current.map(x => x.id));
+  return [...current, ...incoming.filter(x => x && x.id && !ids.has(x.id))];
+}
+
+function importSections(imported, mode) {
+  ["tinctures", "canning", "profiles"].forEach(name => {
+    const inc = imported[name];
+    if (!inc) return;
+    if (mode === "replace") {
+      saveSection(name, { ...SECTION_DEFAULTS[name](), ...inc });
+      return;
+    }
+    const cur = loadSection(name);
+    if (name === "tinctures") {
+      cur.recipes = mergeById(cur.recipes, inc.recipes);
+      cur.bottles = mergeById(cur.bottles, inc.bottles);
+    } else if (name === "canning") {
+      cur.batches = mergeById(cur.batches, inc.batches);
+    } else {
+      cur.members = mergeById(cur.members, inc.members);
+      Object.entries(inc.favorites || {}).forEach(([member, ids]) => {
+        cur.favorites[member] = [...new Set([...(cur.favorites[member] || []), ...(ids || [])])];
+      });
+    }
+    saveSection(name, cur);
+  });
 }
 
 function isValidRecipe(r) {
@@ -217,6 +281,7 @@ function isValidProduct(p) {
 // Сливает импортированные данные с текущими. mode: "merge" | "replace".
 // При слиянии рецепт с уже занятым id получает новый, чтобы не затирать свой.
 function applyImport(current, imported, mode) {
+  importSections(imported, mode);
   if (mode === "replace") {
     saveCustomProducts(imported.customProducts);
     return imported.recipes;

@@ -51,9 +51,19 @@ function buildRow(cells) {
 
 // --- Разделы ---
 
+// Разделы и их отрисовка. Разделы настоек и автоклава живут в своих модулях.
+const VIEWS = {
+  recipes: () => renderRecipesView(),
+  products: () => renderProductsView(),
+  menu: () => renderMenuView(),
+  tinctures: () => renderTincturesView(),
+  canning: () => renderCanningView()
+};
+
 function setView(name) {
+  if (!VIEWS[name]) name = "recipes";
   activeView = name;
-  ["recipes", "products", "menu"].forEach(v => {
+  Object.keys(VIEWS).forEach(v => {
     el("view-" + v).classList.toggle("hidden", v !== name);
   });
   el("appNav").querySelectorAll(".nav-btn").forEach(btn => {
@@ -64,9 +74,7 @@ function setView(name) {
 
 function render() {
   renderDatalists();
-  if (activeView === "recipes") renderRecipesView();
-  else if (activeView === "products") renderProductsView();
-  else renderMenuView();
+  VIEWS[activeView]();
 }
 
 function renderDatalists() {
@@ -154,14 +162,15 @@ function init() {
   initYieldUi();
   initProductsUi();
   initMenuUi();
+  initProfilesUi();
+  initTincturesUi();
+  initCanningUi();
 
   render();
 }
 
 function closeAnyModal() {
-  el("recipeModal").classList.add("hidden");
-  el("productModal").classList.add("hidden");
-  el("syncModal").classList.add("hidden");
+  document.querySelectorAll(".modal").forEach(m => m.classList.add("hidden"));
 }
 
 document.addEventListener("DOMContentLoaded", init);

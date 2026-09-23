@@ -3,6 +3,7 @@
 
 let activeCategory = "all";
 let activeTags = new Set();
+let onlyFavorites = false;
 let searchQuery = "";
 let kcalMin = null;
 let kcalMax = null;
@@ -39,6 +40,9 @@ function initRecipesUi() {
     el("formYield").setCustomValidity(bad ? "Вес в граммах, например 850" : "");
   });
   el("printRecipeBtn").addEventListener("click", () => window.print());
+  el("favoriteBtn").addEventListener("click", () => {
+    if (selectedId && toggleFavorite(selectedId)) renderRecipesView();
+  });
   el("addToMenuBtn").addEventListener("click", () => {
     if (selectedId) addRecipeToMenu(selectedId);
   });
@@ -61,6 +65,7 @@ function initRecipesUi() {
     if (!confirm(`Удалить рецепт «${recipe.title}»?`)) return;
     recipes = recipes.filter(r => r.id !== selectedId);
     removeRecipeFromMenu(selectedId);
+    forgetRecipeInFavorites(selectedId);
     selectedId = null;
     saveRecipes(recipes);
     render();
@@ -101,10 +106,12 @@ function parseTags(text) {
 function getFilteredRecipes() {
   const q = searchQuery.trim().toLowerCase().replace(/^#/, "");
   const byKcal = kcalMin !== null || kcalMax !== null;
+  const favorites = favoriteIds();
   return recipes.filter(r => {
     if (activeCategory !== "all" && r.category !== activeCategory) return false;
     if (byKcal && !kcalInRange(r)) return false;
     const tags = r.tags || [];
+    if (onlyFavorites && !favorites.has(r.id)) return false;
     if ([...activeTags].some(t => !tags.includes(t))) return false;
     if (!q) return true;
     if (r.title.toLowerCase().includes(q)) return true;
@@ -200,6 +207,24 @@ function renderTagFilters() {
 function renderCategoryFilters() {
   const wrap = el("categoryFilters");
   wrap.innerHTML = "";
+
+  // «★ Избранное» — личный список текущего члена семьи.
+  const me = currentMember();
+  if (!me) onlyFavorites = false;
+  const fav = document.createElement("button");
+  fav.type = "button";
+  fav.className = "chip chip-fav" + (onlyFavorites ? " active" : "");
+  fav.textContent = me ? `★ Избранное (${favoriteIds().size})` : "★ Избранное";
+  fav.title = me ? `Избранное: ${me.name}` : "Выберите в настройках, кто вы, чтобы вести своё избранное";
+  fav.addEventListener("click", () => {
+    if (!currentMember()) {
+      openSettings("Чтобы вести избранное, выберите, кто вы, или добавьте своё имя.");
+      return;
+    }
+    onlyFavorites = !onlyFavorites;
+    renderRecipesView();
+  });
+  wrap.appendChild(fav);
   ["all", ...getCategories()].forEach(cat => {
     const chip = document.createElement("button");
     chip.type = "button";
@@ -218,6 +243,7 @@ function renderRecipeList() {
   listEl.innerHTML = "";
 
   const filtered = getFilteredRecipes();
+  const favorites = favoriteIds();
   el("recipeListEmpty").classList.toggle("hidden", filtered.length > 0);
 
   filtered.forEach(recipe => {
@@ -236,6 +262,14 @@ function renderRecipeList() {
     meta.textContent = perServing
       ? `${recipe.category} · ${Math.round(perServing.kcal)} ккал/порция`
       : recipe.category;
+
+    if (favorites.has(recipe.id)) {
+      const star = document.createElement("span");
+      star.className = "fav-mark";
+      star.textContent = "★";
+      star.setAttribute("aria-label", "в избранном");
+      title.prepend(star, " ");
+    }
 
     li.append(title, meta);
     li.addEventListener("click", () => {
@@ -405,31 +439,63 @@ function renderSteps(recipe) {
 
 // Превращает ссылку YouTube в embed-URL. Для остальных ссылок возвращает null,
 // такие видео отдаём тегу <video>.
-function youtubeEmbedUrl(url) {
+// Видео хранится на видеохостинге, в рецепте — только ссылка. Понимаем
+// обычные ссылки «поделиться» и вставленный целиком код встраивания (iframe).
+function extractVideoUrl(text) {
+  const raw = String(text || "").trim();
+  const iframe = raw.match(/<iframe[^>]*\ssrc=["']([^"']+)["']/i);
+  const url = iframe ? iframe[1] : raw;
+  return url.startsWith("//") ? "https:" + url : url;
+}
+
+// Возвращает адрес для встраивания или null, если хостинг не распознан.
+function videoEmbedUrl(text) {
+  let u;
   try {
-    const u = new URL(url);
-    const host = u.hostname.replace(/^www\./, "");
-    if (host === "youtu.be") {
-      return `https://www.youtube.com/embed/${u.pathname.slice(1)}`;
-    }
-    if (host === "youtube.com" || host === "m.youtube.com") {
-      if (u.pathname === "/watch" && u.searchParams.get("v")) {
-        return `https://www.youtube.com/embed/${u.searchParams.get("v")}`;
-      }
-      if (u.pathname.startsWith("/embed/") || u.pathname.startsWith("/shorts/")) {
-        return `https://www.youtube.com/embed/${u.pathname.split("/")[2]}`;
-      }
-    }
+    u = new URL(extractVideoUrl(text));
   } catch {
     return null;
   }
+  const host = u.hostname.replace(/^(www\.|m\.)/, "");
+
+  // YouTube
+  if (host === "youtu.be") return `https://www.youtube.com/embed/${u.pathname.slice(1)}`;
+  if (host === "youtube.com") {
+    if (u.pathname === "/watch" && u.searchParams.get("v")) {
+      return `https://www.youtube.com/embed/${u.searchParams.get("v")}`;
+    }
+    const m = u.pathname.match(/^\/(embed|shorts|live)\/([\w-]+)/);
+    if (m) return `https://www.youtube.com/embed/${m[2]}`;
+  }
+
+  // Rutube: у приватных видео ключ доступа в параметре p — его сохраняем.
+  if (host === "rutube.ru") {
+    const m = u.pathname.match(/\/(?:video(?:\/private)?|shorts|play\/embed)\/([0-9a-f]{32})/i);
+    if (m) {
+      const key = u.searchParams.get("p");
+      return `https://rutube.ru/play/embed/${m[1]}/` + (key ? `?p=${encodeURIComponent(key)}` : "");
+    }
+  }
+
+  // VK Видео: у закрытых видео нужен hash — он есть в коде встраивания
+  // («Поделиться» → «Экспортировать»); открытые играют и без него.
+  if (host === "vk.com" || host === "vkvideo.ru" || host === "vk.ru") {
+    if (u.pathname === "/video_ext.php") return `https://vk.com/video_ext.php?${u.searchParams.toString()}`;
+    const ref = (u.pathname + " " + (u.searchParams.get("z") || "")).match(/video(-?\d+)_(\d+)/);
+    if (ref) return `https://vk.com/video_ext.php?oid=${ref[1]}&id=${ref[2]}&hd=2`;
+  }
   return null;
+}
+
+function isDirectVideoFile(url) {
+  return /\.(mp4|webm|mov|m4v|ogg)(\?|#|$)/i.test(url);
 }
 
 function renderVideo(recipe) {
   const section = el("videoSection");
   const wrap = el("videoWrap");
   wrap.innerHTML = "";
+  wrap.classList.remove("video-link-only");
 
   if (!recipe.video) {
     section.classList.add("hidden");
@@ -437,19 +503,33 @@ function renderVideo(recipe) {
   }
   section.classList.remove("hidden");
 
-  const embed = youtubeEmbedUrl(recipe.video);
+  const url = extractVideoUrl(recipe.video);
+  const embed = videoEmbedUrl(url);
   if (embed) {
     const iframe = document.createElement("iframe");
     iframe.src = embed;
-    iframe.allow = "accelerometer; encrypted-media; picture-in-picture";
+    iframe.allow = "autoplay; encrypted-media; fullscreen; picture-in-picture; clipboard-write";
     iframe.allowFullscreen = true;
     iframe.loading = "lazy";
+    iframe.referrerPolicy = "strict-origin-when-cross-origin";
     wrap.appendChild(iframe);
-  } else {
+  } else if (isDirectVideoFile(url)) {
     const video = document.createElement("video");
-    video.src = recipe.video;
+    video.src = url;
     video.controls = true;
+    video.preload = "metadata";
     wrap.appendChild(video);
+  } else {
+    // Неизвестный хостинг (Яндекс Диск, облако и т. п.) — встроить нельзя,
+    // показываем ссылку, а не пустой чёрный плеер.
+    wrap.classList.add("video-link-only");
+    const a = document.createElement("a");
+    a.href = url;
+    a.target = "_blank";
+    a.rel = "noopener";
+    a.className = "btn btn-secondary";
+    a.textContent = "Открыть видео ↗";
+    wrap.appendChild(a);
   }
 }
 
@@ -466,6 +546,9 @@ function renderDetail() {
   el("recipeDetail").classList.remove("hidden");
 
   el("detailTitle").textContent = recipe.title;
+  const fav = isFavorite(recipe.id);
+  el("favoriteBtn").textContent = fav ? "★ В избранном" : "☆ В избранное";
+  el("favoriteBtn").classList.toggle("is-fav", fav);
   el("detailCategory").textContent = recipe.category;
 
   const timeEl = el("detailTime");

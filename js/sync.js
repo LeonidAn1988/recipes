@@ -16,7 +16,11 @@ const SYNC_KEYS = {
 };
 
 // Ключи, которые составляют книгу и уезжают в облако.
-const SYNCED_KEYS = [STORAGE_KEYS.recipes, STORAGE_KEYS.products, STORAGE_KEYS.menu, STORAGE_KEYS.seeded];
+// Профиль устройства («кто я») и тема оформления — личные, в облако не идут.
+const SYNCED_KEYS = [
+  STORAGE_KEYS.recipes, STORAGE_KEYS.products, STORAGE_KEYS.menu, STORAGE_KEYS.seeded,
+  STORAGE_KEYS.tinctures, STORAGE_KEYS.canning, STORAGE_KEYS.profiles
+];
 
 const GIST_FILE = "recipes-book.json";
 const GIST_DESCRIPTION = "Книга рецептов — облачное сохранение";
