@@ -4,12 +4,27 @@
 let activeCategory = "all";
 let activeTags = new Set();
 let searchQuery = "";
+let kcalMin = null;
+let kcalMax = null;
+
+// Быстрые диапазоны калорийности порции — чтобы на телефоне не набирать числа.
+const KCAL_PRESETS = [
+  { label: "до 300", min: null, max: 300 },
+  { label: "300–500", min: 300, max: 500 },
+  { label: "500+", min: 500, max: null }
+];
 
 function initRecipesUi() {
   el("searchInput").addEventListener("input", e => {
     searchQuery = e.target.value;
     renderRecipesView();
   });
+
+  ["kcalMin", "kcalMax"].forEach(id => el(id).addEventListener("input", () => {
+    kcalMin = readKcal("kcalMin");
+    kcalMax = readKcal("kcalMax");
+    renderRecipesView();
+  }));
 
   el("addRecipeBtn").addEventListener("click", () => openRecipeModal());
   el("addIngredientBtn").addEventListener("click", () => addIngredientRow());
@@ -79,8 +94,10 @@ function parseTags(text) {
 // Выбранные теги сужают список: рецепт должен иметь их все.
 function getFilteredRecipes() {
   const q = searchQuery.trim().toLowerCase().replace(/^#/, "");
+  const byKcal = kcalMin !== null || kcalMax !== null;
   return recipes.filter(r => {
     if (activeCategory !== "all" && r.category !== activeCategory) return false;
+    if (byKcal && !kcalInRange(r)) return false;
     const tags = r.tags || [];
     if ([...activeTags].some(t => !tags.includes(t))) return false;
     if (!q) return true;
@@ -88,6 +105,53 @@ function getFilteredRecipes() {
     if (tags.some(t => t.includes(q))) return true;
     return (r.ingredients || []).some(i => i.product.toLowerCase().includes(q));
   });
+}
+
+function readKcal(id) {
+  const v = el(id).value.trim();
+  return v === "" || isNaN(Number(v)) ? null : Number(v);
+}
+
+// Сравниваем с тем же округлённым числом, что видно в списке.
+// Рецепт без числа порций калорийности на порцию не имеет — при включённом
+// фильтре он не показывается.
+function kcalInRange(recipe) {
+  const perServing = calcRecipe(recipe).total.perServing;
+  if (!perServing) return false;
+  const kcal = Math.round(perServing.kcal);
+  if (kcalMin !== null && kcal < kcalMin) return false;
+  if (kcalMax !== null && kcal > kcalMax) return false;
+  return true;
+}
+
+function setKcalRange(min, max) {
+  kcalMin = min;
+  kcalMax = max;
+  el("kcalMin").value = min ?? "";
+  el("kcalMax").value = max ?? "";
+  renderRecipesView();
+}
+
+function renderKcalPresets() {
+  const wrap = el("kcalPresets");
+  wrap.innerHTML = "";
+  KCAL_PRESETS.forEach(p => {
+    const active = kcalMin === p.min && kcalMax === p.max;
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "chip chip-tag" + (active ? " active" : "");
+    chip.textContent = p.label;
+    chip.addEventListener("click", () => active ? setKcalRange(null, null) : setKcalRange(p.min, p.max));
+    wrap.appendChild(chip);
+  });
+  if (kcalMin !== null || kcalMax !== null) {
+    const reset = document.createElement("button");
+    reset.type = "button";
+    reset.className = "chip chip-reset";
+    reset.textContent = "Любая";
+    reset.addEventListener("click", () => setKcalRange(null, null));
+    wrap.appendChild(reset);
+  }
 }
 
 function toggleTagFilter(tag) {
@@ -416,6 +480,7 @@ function renderDetailTags(recipe) {
 }
 
 function renderRecipesView() {
+  renderKcalPresets();
   renderCategoryFilters();
   renderTagFilters();
   renderRecipeList();

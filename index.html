@@ -38,6 +38,16 @@
 
       <input type="search" id="searchInput" placeholder="Блюдо, продукт или #тег" class="search-input">
 
+      <div class="kcal-filter">
+        <div class="kcal-filter-row">
+          <span class="kcal-filter-label">Ккал на порцию</span>
+          <input type="number" id="kcalMin" class="kcal-input" inputmode="numeric" min="0" step="10" placeholder="от" aria-label="Калорий на порцию от">
+          <span class="kcal-dash">—</span>
+          <input type="number" id="kcalMax" class="kcal-input" inputmode="numeric" min="0" step="10" placeholder="до" aria-label="Калорий на порцию до">
+        </div>
+        <div class="kcal-presets" id="kcalPresets"></div>
+      </div>
+
       <div class="category-filters" id="categoryFilters"></div>
       <div class="tag-filters hidden" id="tagFilters"></div>
 

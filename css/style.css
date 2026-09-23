@@ -961,3 +961,33 @@ body {
   #formIngredients td { padding: 0; }
   #formIngredients td:first-child { grid-column: 1 / -1; }
 }
+
+.kcal-filter { margin-bottom: 0.9rem; }
+.kcal-filter-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.45rem;
+}
+.kcal-filter-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-right: auto;
+  white-space: nowrap;
+}
+.kcal-input {
+  width: 5rem;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.9rem;
+}
+.kcal-dash { color: var(--text-muted); }
+.kcal-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
