@@ -4,7 +4,7 @@
 const fs = require("fs"), path = require("path"), vm = require("vm");
 const ctx = vm.createContext({});
 vm.runInContext(["canningData", "canningCalc"].map(f => fs.readFileSync(path.join(__dirname, "..", "js", f + ".js"), "utf8")).join("\n") +
-  ";this.api={canningMode,canningBatch,CANNING_PRODUCTS,CANNING_JARS};", ctx);
+  ";this.api={canningMode,canningBatch,cannerValidation,CANNING_PRODUCTS,CANNING_JARS};", ctx);
 const A = ctx.api;
 let fails = 0;
 const ok = (name, cond, extra = "") => { if (!cond) fails++; console.log((cond ? "OK   " : "FAIL ") + name + (cond ? "" : " " + extra)); };
@@ -51,6 +51,12 @@ ok("соль для кварты = 2 × норма пинты", b.saltTsp === 1)
 const ground = A.CANNING_PRODUCTS.find(p => p.id === "meat-ground");
 ok("соль фарша в 0,5–0,7 л ≈ 1½ ч.л. (по объёму)", A.canningBatch(1, 500, 7, ground, A.CANNING_JARS.find(j => j.id === "500")).saltTsp === 1.5);
 ok("курица: отступ 3,2 см (1¼ дюйма)", A.CANNING_PRODUCTS.find(p => p.id === "chicken-bone").headspace === 3.2);
+
+// Связка автоклава и крышек.
+ok("плита + Mason → проверено", A.cannerValidation("stovetop", "two-piece").ok === true);
+ok("электрический → не проверено", A.cannerValidation("electric", "two-piece").ok === false);
+ok("плита + твист-офф → не проверено", A.cannerValidation("stovetop", "twist").ok === false);
+ok("электрический + твист-офф → две причины", A.cannerValidation("electric", "twist").reasons.length === 2);
 
 console.log(fails ? `\n${fails} ПРОВАЛЕНО` : "\nВсе проверки прошли");
 process.exit(fails ? 1 : 0);

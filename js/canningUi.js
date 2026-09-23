@@ -33,6 +33,20 @@ function initCanningUi() {
   el("canningPage").addEventListener("change", onCanningChange);
   el("canningPage").addEventListener("input", onCanningInput);
   el("canningPage").addEventListener("click", onCanningClick);
+  el("canningPage").addEventListener("submit", e => {
+    if (e.target.id !== "makerForm") return;
+    e.preventDefault();
+    const f = e.target;
+    const val = n => f.querySelector(`[name="${n}"]`).value.trim();
+    const temp = parseAmount(val("temp"));
+    const minutes = Math.round(parseAmount(val("minutes")));
+    if (!(temp > 0) || !(minutes > 0)) return;
+    const modes = canningSettings().makerModes;
+    modes.push({ id: newId("mm"), product: val("product"), jar: val("jar"), temp, minutes, note: val("note") });
+    saveCanningSettings({ makerModes: modes });
+    f.reset();
+    renderMakerModes();
+  });
   el("canningPage").addEventListener("toggle", e => {
     if (e.target.classList && e.target.classList.contains("safety")) {
       try { localStorage.setItem(SAFETY_OPEN_KEY, e.target.open ? "1" : "0"); } catch {}
@@ -49,7 +63,11 @@ function canningSettings() {
     elevation: s.elevation ?? 150,
     capacity: s.capacity || 7,
     rawKg: s.rawKg ?? "",
-    perJar: s.perJar ?? ""
+    perJar: s.perJar ?? "",
+    canner: CANNER_TYPES[s.canner] ? s.canner : "stovetop",
+    lids: LID_TYPES[s.lids] ? s.lids : "two-piece",
+    model: s.model || "",
+    makerModes: Array.isArray(s.makerModes) ? s.makerModes : []
   };
 }
 
@@ -77,7 +95,7 @@ function renderCanningView() {
       <summary>Главное о безопасности — прочитайте перед первой загрузкой</summary>
       <ul>
         <li>Мясо, птица, рыба, грибы и овощи — <strong>низкокислотные продукты</strong>. Споры ботулизма переживают кипячение; их убивает только нагрев до 116–121 °C под давлением пара. Кипячение в кастрюле их не обеззараживает, сколько бы часов оно ни длилось.</li>
-        <li><strong>Режимы годятся только для паровой скороварки-консерватора с продувкой</strong> (pressure canner): банки стоят на решётке в небольшом слое воды, давление создаёт пар. Если давление в вашем автоклаве накачивают насосом или компрессором или банки стоят полностью под водой, эти режимы к нему не применимы — манометр там показывает давление воздуха, а температура ниже.</li>
+        <li><strong>Режимы годятся только для паровой скороварки-консерватора с продувкой</strong> (pressure canner): банки стоят на решётке в небольшом слое воды, давление создаёт пар, нагрев — на плите. Для электрических автоклавов с ТЭНом режимы NCHFP не проверялись. Если давление в вашем автоклаве накачивают насосом или компрессором или банки стоят полностью под водой, эти режимы к нему не применимы — манометр там показывает давление воздуха, а температура ниже.</li>
         <li>Режимы проверены на банках Mason с двухсоставной самоуплотняющейся крышкой. Для крышек твист-офф и СКО под закатку проверенных данных нет. Банки из-под покупных продуктов не используйте.</li>
         <li>Время <strong>нельзя сокращать</strong>, давление — понижать. Упало давление ниже нормы — верните его и начните отсчёт заново, с полного времени.</li>
         <li>Стрелочный манометр проверяйте раз в год. Завышает на 1–2 psi — прибавьте эту разницу к давлению из калькулятора; расходится больше чем на 2 psi — замените. Грузовой клапан проверки не требует.</li>
@@ -85,6 +103,18 @@ function renderCanningView() {
         <li>Отраслевые инструкции ВНИИКИМП написаны для промышленных автоклавов и конкретной тары. Проверенные режимы для домашнего консервирования публикует NCHFP (партнёр министерства сельского хозяйства США).</li>
       </ul>
     </details>
+
+    <section class="tn-section">
+      <h3>Мой автоклав</h3>
+      <form class="calc-card" id="cannerForm" onsubmit="return false">
+        <div class="calc-fields canning-fields">
+          <label class="span-2">Тип <select name="canner">${Object.entries(CANNER_TYPES).map(([k, v]) => `<option value="${k}"${k === s.canner ? " selected" : ""}>${esc(v)}</option>`).join("")}</select></label>
+          <label>Крышки <select name="lids">${Object.entries(LID_TYPES).map(([k, v]) => `<option value="${k}"${k === s.lids ? " selected" : ""}>${esc(v)}</option>`).join("")}</select></label>
+          <label>Модель <input type="text" name="model" value="${esc(s.model)}" placeholder="например, «Малиновка-2»"></label>
+        </div>
+        <p class="hint">Настройка общая для семьи: от неё зависит, можно ли пользоваться проверенными режимами.</p>
+      </form>
+    </section>
 
     <section class="tn-section">
       <h3>Подобрать режим</h3>
@@ -100,6 +130,22 @@ function renderCanningView() {
           </fieldset>
         </div>
         <div id="canningResult" aria-live="polite"></div>
+      </form>
+    </section>
+
+    <section class="tn-section" id="makerSection">
+      <h3>Режимы из инструкции автоклава${s.model ? ` «${esc(s.model)}»` : ""}</h3>
+      <p class="hint">Перепишите режимы из инструкции к вашему автоклаву — они будут под рукой у всей семьи. Это данные производителя: независимо их никто не проверял. Если в инструкции нет режима для продукта или банки — такой продукт в этом автоклаве не консервируйте.</p>
+      <div id="makerModes"></div>
+      <form class="calc-card maker-form" id="makerForm">
+        <div class="calc-fields">
+          <label class="span-2">Продукт <input type="text" name="product" required placeholder="например, тушёнка из говядины"></label>
+          <label>Банка <input type="text" name="jar" required placeholder="0,5 л"></label>
+          <label>Температура, °C <input type="text" inputmode="decimal" name="temp" required placeholder="120"></label>
+          <label>Время выдержки, мин <input type="text" inputmode="numeric" name="minutes" required placeholder="60"></label>
+          <label class="span-2">Заметка <input type="text" name="note" placeholder="страница инструкции, особые условия"></label>
+        </div>
+        <button type="submit" class="btn btn-secondary btn-small">Добавить режим</button>
       </form>
     </section>
 
@@ -123,7 +169,25 @@ function renderCanningView() {
     </section>`;
 
   updateCanningResult();
+  renderMakerModes();
   renderBatchJournal();
+}
+
+function renderMakerModes() {
+  const box = el("makerModes");
+  if (!box) return;
+  const modes = canningSettings().makerModes;
+  box.innerHTML = modes.length ? `<ul class="bottle-list maker-list">${modes.map(m => `<li class="bottle">
+      <div class="bottle-main">
+        <span class="bottle-title">${esc(m.product)}</span>
+        <span class="stage">по данным производителя</span>
+        <div class="bottle-facts">${esc(m.jar)} · <strong>${esc(formatAmount(m.temp))} °C</strong> · <strong>${esc(m.minutes)} мин</strong> выдержки${m.note ? " · " + esc(m.note) : ""}</div>
+      </div>
+      <div class="bottle-actions">
+        <button type="button" class="btn btn-secondary btn-small" data-act="log-maker" data-id="${m.id}">Записать партию</button>
+        <button type="button" class="btn-icon" data-act="del-maker" data-id="${m.id}" aria-label="Удалить режим" title="Удалить режим">✕</button>
+      </div>
+    </li>`).join("")}</ul>` : `<p class="hint">Пока режимов нет.</p>`;
 }
 
 function currentCanningMode() {
@@ -131,9 +195,29 @@ function currentCanningMode() {
   return canningMode(s.productId, s.jarId, s.gauge, parseAmount(String(s.elevation)));
 }
 
+// Режим NCHFP — только если связка «автоклав + крышки» проверена, иначе null.
+function validatedMode() {
+  const s = canningSettings();
+  if (!cannerValidation(s.canner, s.lids).ok) return null;
+  const mode = currentCanningMode();
+  return mode.ok ? mode : null;
+}
+
 function updateCanningResult() {
   const box = el("canningResult");
   if (!box) return;
+  const settings = canningSettings();
+  const check = cannerValidation(settings.canner, settings.lids);
+  if (!check.ok) {
+    box.innerHTML = `<div class="verdict verdict-stop">
+      <strong>Для вашего автоклава проверенного режима нет.</strong>
+      <ul>${check.reasons.map(r => `<li>${esc(r)}</li>`).join("")}</ul>
+      <p>Пользуйтесь режимами из инструкции к автоклаву — внесите их ниже. Держите по термометру температуру не ниже указанной всё время выдержки; упала — верните её и начните отсчёт заново. Выключив нагрев, дайте автоклаву остыть самому.</p>
+      <p class="hint">Источник: <a href="https://nchfp.uga.edu/newsflash/canning-in-electric-multi-cookers" target="_blank" rel="noopener">NCHFP о консервировании в электрических приборах</a>, <a href="https://nchfp.uga.edu/how/can/general-information/recommended-canners/" target="_blank" rel="noopener">NCHFP — рекомендуемые автоклавы</a>.</p>
+    </div>`;
+    updateBatchResult(null);
+    return;
+  }
   const mode = currentCanningMode();
   if (!mode.ok) {
     box.innerHTML = `<div class="verdict verdict-stop"><strong>Проверенного режима нет.</strong> ${esc(mode.reason)}</div>`;
@@ -169,30 +253,27 @@ function updateBatchResult(mode) {
   const s = canningSettings();
   const jar = CANNING_JARS.find(j => j.id === s.jarId);
   el("batchForm").querySelector('[name="perJar"]').placeholder = `≈ ${defaultPerJar(jar)}`;
-  if (!mode) {
-    out.textContent = "Сначала подберите проверенный режим выше.";
-    return;
-  }
   if (!s.rawKg) {
     out.textContent = "Укажите вес сырья — появится расчёт банок и загрузок.";
     return;
   }
   const r = currentBatch(mode);
-  if (r.error) {
+  if (r && r.error) {
     out.textContent = r.error;
     return;
   }
   out.innerHTML = `Получится <strong>${r.jars} ${plural(r.jars, "банка", "банки", "банок")}</strong> по ${esc(jar.label)} — ` +
     `${r.loads} ${plural(r.loads, "загрузка", "загрузки", "загрузок")}` +
     (r.loads > 1 && r.lastLoad !== Math.floor(Number(s.capacity)) ? ` (в последней ${r.lastLoad})` : "") +
-    `. Каждая загрузка — 10 мин продувки, выход на давление, ${mode.minutes} мин стерилизации и естественное остывание.` +
+    (mode ? `. Каждая загрузка — 10 мин продувки, выход на давление, ${mode.minutes} мин стерилизации и естественное остывание.` : ".") +
     (r.saltTsp ? ` Соли по желанию — ${formatAmount(r.saltTsp * r.jars)} ч.л. на партию.` : "");
 }
 
 function currentBatch(mode) {
   const s = canningSettings();
   const jar = CANNING_JARS.find(j => j.id === s.jarId);
-  return canningBatch(parseAmount(String(s.rawKg)), parseAmount(String(s.perJar)) || defaultPerJar(jar), parseAmount(String(s.capacity)), mode.product, jar);
+  const product = mode ? mode.product : CANNING_PRODUCTS.find(p => p.id === s.productId);
+  return canningBatch(parseAmount(String(s.rawKg)), parseAmount(String(s.perJar)) || defaultPerJar(jar), parseAmount(String(s.capacity)), product, jar);
 }
 
 // --- Журнал партий ---
@@ -229,10 +310,11 @@ function renderBatchJournal() {
   }).join("")}</ul>`;
 }
 
-function openBatchLog(batch) {
+function openBatchLog(batch, maker) {
   const form = el("batchLogForm");
   form.reset();
   form.dataset.id = batch ? batch.id : "";
+  form.dataset.maker = maker ? maker.id : "";
   el("batchModalTitle").textContent = batch ? "Изменить запись" : "Записать партию";
   if (batch) {
     el("batchModeLine").textContent = `${batch.label} · ${batch.jarLabel} · ${batch.mode}`;
@@ -240,6 +322,9 @@ function openBatchLog(batch) {
     el("blJars").value = batch.jars;
     el("blLeft").value = batch.left;
     el("blNotes").value = batch.notes || "";
+  } else if (maker) {
+    el("batchModeLine").textContent = `${maker.product} · ${maker.jar} · ${formatAmount(maker.temp)} °C, ${maker.minutes} мин (по данным производителя)`;
+    el("blDate").value = todayIso();
   } else {
     const mode = currentCanningMode();
     if (!mode.ok) return;
@@ -262,8 +347,22 @@ function saveBatchLog(e) {
   const left = leftRaw === "" ? jars : Math.min(jars, Math.max(0, Math.round(parseAmount(leftRaw) || 0)));
   const data = loadSection("canning");
   const existing = data.batches.find(b => b.id === form.dataset.id);
+  const maker = canningSettings().makerModes.find(m => m.id === form.dataset.maker);
   if (existing) {
     Object.assign(existing, { date: el("blDate").value, jars, left, notes: el("blNotes").value.trim(), updatedAt: new Date().toISOString() });
+  } else if (maker) {
+    data.batches.push({
+      id: newId("cb"),
+      date: el("blDate").value,
+      productId: null,
+      label: maker.product,
+      jarLabel: maker.jar,
+      mode: `${formatAmount(maker.temp)} °C, ${maker.minutes} мин (производитель)`,
+      jars,
+      left,
+      notes: el("blNotes").value.trim(),
+      updatedAt: new Date().toISOString()
+    });
   } else {
     const mode = currentCanningMode();
     if (!mode.ok) return;
@@ -289,6 +388,11 @@ function saveBatchLog(e) {
 // --- События ---
 
 function onCanningChange(e) {
+  if (e.target.closest("#cannerForm") && (e.target.name === "canner" || e.target.name === "lids")) {
+    saveCanningSettings({ [e.target.name]: e.target.value });
+    updateCanningResult();
+    return;
+  }
   if (!e.target.closest("#canningForm")) return;
   const name = e.target.name;
   if (!["productId", "jarId", "gauge"].includes(name)) return;
@@ -303,13 +407,17 @@ function onCanningChange(e) {
 
 function onCanningInput(e) {
   const name = e.target.name;
+  if (e.target.closest("#cannerForm") && name === "model") {
+    saveCanningSettings({ model: e.target.value.trim() });
+    const h = el("makerSection").querySelector("h3");
+    h.textContent = "Режимы из инструкции автоклава" + (e.target.value.trim() ? ` «${e.target.value.trim()}»` : "");
+    return;
+  }
+  if (e.target.closest("#makerForm")) return;
   if (!["elevation", "rawKg", "perJar", "capacity"].includes(name)) return;
   saveCanningSettings({ [name]: e.target.value });
   if (name === "elevation") updateCanningResult();
-  else {
-    const mode = currentCanningMode();
-    updateBatchResult(mode.ok ? mode : null);
-  }
+  else updateBatchResult(validatedMode());
 }
 
 function onCanningClick(e) {
@@ -317,6 +425,18 @@ function onCanningClick(e) {
   if (!btn) return;
   const data = loadSection("canning");
   const b = data.batches.find(x => x.id === btn.dataset.id);
+
+  if (btn.dataset.act === "del-maker") {
+    const modes = canningSettings().makerModes;
+    const m = modes.find(x => x.id === btn.dataset.id);
+    if (!m || !confirm(`Удалить режим «${m.product}, ${m.jar}»?`)) return;
+    saveCanningSettings({ makerModes: modes.filter(x => x.id !== m.id) });
+    return renderMakerModes();
+  }
+  if (btn.dataset.act === "log-maker") {
+    const m = canningSettings().makerModes.find(x => x.id === btn.dataset.id);
+    return m && openBatchLog(null, m);
+  }
 
   switch (btn.dataset.act) {
     case "log-batch": return openBatchLog();

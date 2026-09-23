@@ -1512,3 +1512,8 @@ textarea { border-color: var(--input-border) !important; }
   }
 }
 .app-nav.nav-at-end { -webkit-mask-image: none; mask-image: none; }
+.verdict-stop ul { margin: 0.5rem 0; padding-left: 1.1rem; }
+.verdict-stop p { margin: 0.5rem 0 0; }
+.maker-form { margin-top: 0.6rem; }
+.maker-form .span-2 { grid-column: 1 / -1; }
+.maker-list { margin-bottom: 0.4rem; }
