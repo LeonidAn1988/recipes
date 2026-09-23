@@ -50,6 +50,17 @@ function initRecipesUi() {
     el("formYield").setCustomValidity(bad ? "Вес в граммах, например 850" : "");
   });
   el("printRecipeBtn").addEventListener("click", () => window.print());
+  el("cookBtn").addEventListener("click", () => {
+    const recipe = recipes.find(r => r.id === selectedId);
+    if (recipe) openCookMode(recipe);
+  });
+  el("detailSteps").addEventListener("click", e => {
+    const btn = e.target.closest("[data-step-timer]");
+    if (!btn) return;
+    const recipe = recipes.find(r => r.id === selectedId);
+    const i = Number(btn.dataset.stepTimer);
+    if (recipe && recipe.steps[i]) startTimer(`${recipe.title}, шаг ${i + 1}`, stepMinutes(recipe.steps[i]));
+  });
   el("favoriteBtn").addEventListener("click", () => {
     if (selectedId && toggleFavorite(selectedId)) renderRecipesView();
   });
@@ -445,7 +456,7 @@ function renderSteps(recipe) {
     : "";
   summary.classList.toggle("hidden", !t.total);
 
-  const anyMeta = steps.some(st => st.kind || st.minutes);
+  const anyMeta = steps.some(st => st.kind || stepMinutes(st));
   stepsEl.classList.toggle("steps-with-icons", anyMeta);
 
   steps.forEach((step, i) => {
@@ -464,10 +475,15 @@ function renderSteps(recipe) {
         ic.setAttribute("aria-hidden", "true");
         side.appendChild(ic);
       }
-      if (step.minutes) {
-        const time = document.createElement("span");
+      const mins = stepMinutes(step);
+      if (mins) {
+        const time = document.createElement("button");
+        time.type = "button";
         time.className = "step-time";
-        time.textContent = `${step.minutes} мин`;
+        time.dataset.stepTimer = i;
+        time.textContent = `⏱ ${mins} мин`;
+        time.title = "Запустить таймер";
+        time.setAttribute("aria-label", `Запустить таймер на ${mins} минут`);
         side.appendChild(time);
       }
       li.appendChild(side);
@@ -505,6 +521,18 @@ function renderSteps(recipe) {
       meta.className = "step-meta-line";
       meta.textContent = line;
       body.appendChild(meta);
+    }
+
+    // Количество упомянутых в шаге ингредиентов — чтобы не листать к списку.
+    const mentioned = ingredientsInStep(step.text, recipe.ingredients);
+    if (mentioned.length) {
+      const needs = document.createElement("div");
+      needs.className = "step-needs";
+      needs.textContent = "Нужно: " + mentioned.map(k => {
+        const ing = recipe.ingredients[k];
+        return `${ing.product} — ${ing.unit === "по вкусу" ? "по вкусу" : formatAmount(Number(ing.amount) || 0) + " " + ing.unit}`;
+      }).join("; ");
+      body.appendChild(needs);
     }
 
     if (step.image) {
@@ -640,6 +668,9 @@ function renderDetail() {
   el("recipeDetail").classList.remove("hidden");
 
   el("detailTitle").textContent = recipe.title;
+  const cs = cookState(recipe.id);
+  const started = cs.steps.length || cs.ings.length;
+  el("cookBtn").textContent = started && (recipe.steps || []).length ? `🍳 Продолжить (шаг ${Math.min(cs.step + 1, recipe.steps.length)})` : "🍳 Готовить";
   const fav = isFavorite(recipe.id);
   el("favoriteBtn").textContent = fav ? "★ В избранном" : "☆ В избранное";
   el("favoriteBtn").classList.toggle("is-fav", fav);

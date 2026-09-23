@@ -1621,3 +1621,155 @@ textarea { border-color: var(--input-border) !important; }
 #recipeForm .step-meta input.sm-minutes,
 #recipeForm .step-meta input.sm-temp { width: 4.2rem; flex: 0 0 4.2rem; }
 #recipeForm .step-meta input.sm-program { width: auto; flex: 2 1 14rem; }
+
+/* ───────── Режим готовки ───────── */
+
+body.cook-open { overflow: hidden; }
+.cook {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  background-image: var(--page-pattern);
+  color: var(--text);
+}
+.cook.hidden { display: none; }
+.cook-head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 1rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+.cook-close { font-size: 1.3rem; min-width: 2.6rem; min-height: 2.6rem; }
+.cook-title-wrap { flex: 1; min-width: 0; }
+.cook-title-wrap h2 { margin: 0; font-family: var(--font-display); font-size: 1.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cook-wake { font-size: 0.75rem; color: var(--text-muted); }
+.cook-tabs { display: flex; gap: 0.3rem; padding: 0.5rem 1rem 0; }
+.cook-tabs button {
+  flex: 1;
+  padding: 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text-muted);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.cook-tabs button.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.cook-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  max-width: 44rem;
+  width: 100%;
+  margin: 0 auto;
+  touch-action: pan-y;
+}
+.cook-step-top { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 0.6rem; }
+.cook-icon {
+  display: flex; align-items: center; justify-content: center;
+  width: 3.4rem; height: 3.4rem;
+  font-size: 2rem;
+  border-radius: 50%;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.cook-step-num { font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.2rem; }
+.cook-text { font-size: 1.4rem; line-height: 1.5; margin: 0.4rem 0 0.6rem; text-wrap: pretty; }
+.cook-step-done .cook-text { color: var(--text-muted); }
+.cook-meta { font-size: 1rem; color: var(--text-muted); margin: 0 0 0.8rem; }
+.cook-needs {
+  margin: 0.8rem 0;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.cook-needs-title { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.3rem; }
+.cook-ings { list-style: none; margin: 0; padding: 0; }
+.cook-check {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.55rem 0;
+  font-size: 1.15rem;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+}
+.cook-ings li:last-child .cook-check { border-bottom: none; }
+.cook-check input { width: 1.4rem; height: 1.4rem; flex-shrink: 0; accent-color: var(--accent); }
+.cook-ing-name { flex: 1; min-width: 0; }
+.cook-ing-amount { font-weight: 600; white-space: nowrap; }
+.cook-check.checked .cook-ing-name,
+.cook-check.checked .cook-ing-amount { color: var(--text-muted); text-decoration: line-through; }
+.cook-image { max-width: 100%; border-radius: var(--radius); margin: 0.6rem 0; }
+.cook-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.8rem 1.2rem; margin-top: 1rem; }
+.cook-timer { font-size: 1.05rem; padding: 0.7rem 1rem; }
+.cook-done { font-size: 1rem; }
+.cook-done input { width: 1.3rem; height: 1.3rem; accent-color: var(--accent); }
+.cook-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 1rem calc(0.7rem + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+.cook-nav.hidden { display: none; }
+.cook-nav .btn { flex: 1; font-size: 1.1rem; padding: 0.9rem; }
+.cook-prev:disabled { opacity: 0.4; }
+.cook-progress { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.3rem; max-width: 40%; }
+.cook-dot { width: 0.55rem; height: 0.55rem; border-radius: 50%; background: var(--border); }
+.cook-dot.done { background: var(--level-low); }
+.cook-dot.current { background: var(--accent); transform: scale(1.35); }
+
+/* ───────── Таймеры ───────── */
+
+.timer-bar {
+  position: fixed;
+  right: 0.8rem;
+  bottom: 0.8rem;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  max-width: min(22rem, calc(100vw - 1.6rem));
+}
+body.cook-open .timer-bar { bottom: calc(5.2rem + env(safe-area-inset-bottom)); }
+.timer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.6rem 0.5rem 0.9rem;
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+}
+.timer-clock { font-size: 1.25rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.timer-label { flex: 1; min-width: 0; font-size: 0.8rem; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.timer-done { background: var(--accent); border-color: var(--accent); color: #fff; animation: timer-pulse 1s ease-in-out infinite; }
+.timer-done .timer-label, .timer-done .btn-icon { color: #fff; }
+@keyframes timer-pulse { 50% { transform: scale(1.03); } }
+@media (prefers-reduced-motion: reduce) { .timer-done { animation: none; } }
+
+/* Время у шага — кнопка таймера; строка «Нужно» под шагом. */
+button.step-time {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 0.1rem 0.45rem;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+button.step-time:hover { border-color: var(--accent-ink); color: var(--accent-ink); }
+.step-needs { font-size: 0.82rem; color: var(--text-muted); margin-top: 0.25rem; }

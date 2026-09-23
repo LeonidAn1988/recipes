@@ -197,3 +197,61 @@ function cookingMethodFromSteps(steps) {
   const found = STEP_METHODS.find(x => x.id === best);
   return found ? found.cooking : null;
 }
+
+// --- Ингредиенты, упомянутые в шаге ---
+//
+// Чтобы не листать к списку, под шагом показываем количество ингредиентов,
+// которые в нём упомянуты. Разметка не нужна: название продукта ищем в тексте
+// шага по основам слов («Морковь» → «морк»: «натёр морковь», «моркови»).
+// Уточняющие слова («куриное», «сухие», «в/с») не участвуют.
+
+const INGREDIENT_STOPWORDS = new Set([
+  "сырой", "сырая", "сырое", "сухой", "сухая", "сухие", "свежий", "свежая", "свежие", "молотый", "молотая",
+  "консервированный", "консервированная", "консервированные", "пшеничная", "белый", "белая", "бурый", "красная",
+  "зеленый", "зеленая", "репчатый", "куриное", "вареная", "вареный", "темный", "молочный",
+  "порошок", "натуральный", "обезжиренный", "твердый", "самоподнимающаяся", "стеблевой", "листовой",
+  "собственном", "соку", "грудка", "бедро", "ванильный", "пищевая", "сахарная", "соус"
+]);
+
+const norm = t => String(t || "").toLowerCase().replace(/ё/g, "е");
+
+// Основы слова названия и предельная длина совпадающего слова в тексте:
+// короткие слова — по трём буквам («яйцо» → «яйца», «муку»), длинные — без
+// окончания; беглая гласная учтена («перец» → «перца», «огурец» → «огурцы»).
+// Предел длины отсекает однокоренные глаголы («перемешать» ≠ «перец»).
+function wordStems(name) {
+  const out = [];
+  norm(name).replace(/\([^)]*\)/g, " ").split(/[^a-zа-я]+/).forEach(w => {
+    if (w.length < 3 || INGREDIENT_STOPWORDS.has(w)) return;
+    if (w.length <= 4) {
+      out.push({ stem: w.slice(0, 3), maxLen: w.length + 3 });
+      return;
+    }
+    out.push({ stem: w.slice(0, Math.max(4, w.length - 2)), maxLen: w.length + 3 });
+    if (/[ео][бвгджзклмнпрстфхцчшщ]$/.test(w)) out.push({ stem: w.slice(0, -2) + w.slice(-1), maxLen: w.length + 3 });
+  });
+  return out;
+}
+
+// Возвращает индексы ингредиентов рецепта, упомянутых в тексте шага.
+function ingredientsInStep(text, ingredients) {
+  const words = norm(text).split(/[^a-zа-я]+/).filter(Boolean);
+  const found = [];
+  (ingredients || []).forEach((ing, i) => {
+    const stems = wordStems(ing.product);
+    if (stems.some(({ stem, maxLen }) => words.some(w => w.startsWith(stem) && w.length <= maxLen))) found.push(i);
+  });
+  return found;
+}
+
+// Время шага: указанное в поле или найденное в тексте («варить 5 минут»,
+// «35–40 минут», «1 час», «1,5 часа»). Для диапазона берём нижнюю границу —
+// таймер лучше пусть позовёт проверить готовность пораньше.
+function stepMinutes(step) {
+  if (Number(step.minutes) > 0) return Number(step.minutes);
+  const t = norm(step.text).replace(/,/g, ".");
+  const m = t.match(/(\d+(?:\.\d+)?)\s*(?:[–—-]\s*\d+(?:\.\d+)?\s*)?(мин|час|ч(?![а-я]))/);
+  if (!m) return 0;
+  const n = Number(m[1]);
+  return m[2].startsWith("мин") ? Math.round(n) : Math.round(n * 60);
+}

@@ -173,6 +173,8 @@ function init() {
   initProfilesUi();
   initTincturesUi();
   initCanningUi();
+  initTimers();
+  initCookMode();
   document.querySelectorAll(".modal").forEach(setupModal);
 
   render();
