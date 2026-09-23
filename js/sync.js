@@ -235,7 +235,7 @@ function initSync() {
   document.getElementById("syncForm").addEventListener("submit", handleSyncSubmit);
   document.getElementById("cancelSyncBtn").addEventListener("click", closeSyncModal);
   document.getElementById("syncModal").addEventListener("click", e => {
-    if (e.target.id === "syncModal") closeSyncModal();
+    // Клик по фону — общий менеджер окон (app.js).
   });
   setSyncState(syncConfigured() ? "pending" : "off");
 

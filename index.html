@@ -20,7 +20,7 @@
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="css/style.css?v=20260924001216">
+<link rel="stylesheet" href="css/style.css?v=20260924002853">
 </head>
 <body>
 
@@ -380,7 +380,7 @@
       <fieldset class="form-block">
         <legend>Видео приготовления</legend>
         <input type="text" id="formVideo" autocomplete="off" placeholder="Ссылка на YouTube, Rutube, VK Видео или .mp4">
-        <p class="hint">Снимите видео на телефон → загрузите на YouTube, Rutube или VK Видео с доступом «по ссылке» (видно только тем, у кого есть ссылка) → вставьте ссылку сюда. Видео хранится на хостинге, в книге — только ссылка, поэтому его увидит вся семья. Для закрытых видео VK вставьте код из «Поделиться → Экспортировать».</p>
+        <p class="hint">Загрузите видео на YouTube, Rutube или VK Видео с доступом «по ссылке» и вставьте ссылку — его увидит вся семья. Для закрытых видео VK — код из «Поделиться → Экспортировать».</p>
       </fieldset>
 
       <fieldset class="form-block">
@@ -527,7 +527,7 @@
       <h3>Кто я на этом устройстве</h3>
       <div class="chip-row" id="memberList"></div>
       <form id="addMemberForm" class="inline-form">
-        <input type="text" id="newMemberName" maxlength="30" autocomplete="off" placeholder="Новое имя, например «Оля»">
+        <input type="text" id="newMemberName" maxlength="30" autocomplete="off" aria-label="Новое имя" placeholder="Новое имя, например «Оля»">
         <button type="submit" class="btn btn-secondary btn-small">Добавить</button>
       </form>
       <p class="hint">У каждого члена семьи своё избранное. Список имён и избранное хранятся в общей книге и синхронизируются через облако; выбор «кто я» — только на этом устройстве.</p>
@@ -556,26 +556,28 @@
   </div>
 </div>
 
+<div id="liveAnnouncer" class="visually-hidden" aria-live="polite"></div>
+
 <datalist id="productsList"></datalist>
 <datalist id="productCategoriesList"></datalist>
 <datalist id="recipeCategoriesList"></datalist>
 
-<script src="js/products.js?v=20260924001216"></script>
-<script src="js/store.js?v=20260924001216"></script>
-<script src="js/themes.js?v=20260924001216"></script>
-<script src="js/profiles.js?v=20260924001216"></script>
-<script src="js/sync.js?v=20260924001216"></script>
-<script src="js/nutrition.js?v=20260924001216"></script>
-<script src="js/recipes.js?v=20260924001216"></script>
-<script src="js/app.js?v=20260924001216"></script>
-<script src="js/recipesUi.js?v=20260924001216"></script>
-<script src="js/yieldUi.js?v=20260924001216"></script>
-<script src="js/productsUi.js?v=20260924001216"></script>
-<script src="js/tinctureCalc.js?v=20260924001216"></script>
-<script src="js/tinctureUi.js?v=20260924001216"></script>
-<script src="js/canningData.js?v=20260924001216"></script>
-<script src="js/canningCalc.js?v=20260924001216"></script>
-<script src="js/canningUi.js?v=20260924001216"></script>
-<script src="js/menuUi.js?v=20260924001216"></script>
+<script src="js/products.js?v=20260924002853"></script>
+<script src="js/store.js?v=20260924002853"></script>
+<script src="js/themes.js?v=20260924002853"></script>
+<script src="js/profiles.js?v=20260924002853"></script>
+<script src="js/sync.js?v=20260924002853"></script>
+<script src="js/nutrition.js?v=20260924002853"></script>
+<script src="js/recipes.js?v=20260924002853"></script>
+<script src="js/app.js?v=20260924002853"></script>
+<script src="js/recipesUi.js?v=20260924002853"></script>
+<script src="js/yieldUi.js?v=20260924002853"></script>
+<script src="js/productsUi.js?v=20260924002853"></script>
+<script src="js/tinctureCalc.js?v=20260924002853"></script>
+<script src="js/tinctureUi.js?v=20260924002853"></script>
+<script src="js/canningData.js?v=20260924002853"></script>
+<script src="js/canningCalc.js?v=20260924002853"></script>
+<script src="js/canningUi.js?v=20260924002853"></script>
+<script src="js/menuUi.js?v=20260924002853"></script>
 </body>
 </html>

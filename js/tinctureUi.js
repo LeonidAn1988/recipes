@@ -12,6 +12,12 @@ const STAGE_LABELS = {
 };
 
 let openTinctureId = null;
+// Значения калькуляторов живут, пока открыта страница: раздел перерисовывается
+// целиком, и без этого ввод сбрасывался бы после каждого действия.
+const tnCalcValues = {
+  diluteCalc: { volume: "1000", from: "96", to: "40" },
+  mixCalc: { spiritVolume: "500", spiritAbv: "40", syrupSugar: "0", syrupWater: "0", juice: "0", berries: "0", berryJuicePercent: "50" }
+};
 
 function todayIso() {
   const d = new Date();
@@ -62,7 +68,7 @@ function initTincturesUi() {
 </div>
 <div id="bottleModal" class="modal hidden">
   <div class="modal-content modal-narrow">
-    <h2>Заложить бутылку</h2>
+    <h2 id="bottleModalTitle">Заложить бутылку</h2>
     <form id="bottleForm">
       <label>Что за настойка <input type="text" id="btTitle" required></label>
       <div class="form-row">
@@ -79,7 +85,7 @@ function initTincturesUi() {
       <div class="modal-actions">
         <span class="spacer"></span>
         <button type="button" class="btn btn-secondary" data-close>Отмена</button>
-        <button type="submit" class="btn btn-primary">Заложить</button>
+        <button type="submit" class="btn btn-primary" id="bottleSubmit">Заложить</button>
       </div>
     </form>
   </div>
@@ -89,7 +95,7 @@ function initTincturesUi() {
   ["tinctureModal", "bottleModal"].forEach(id => {
     const modal = el(id);
     modal.addEventListener("click", e => {
-      if (e.target === modal || e.target.hasAttribute("data-close")) modal.classList.add("hidden");
+      if (e.target.hasAttribute("data-close")) closeModal(modal, true);
     });
   });
   el("tnAddIngredient").addEventListener("click", () => addTinctureIngredientRow());
@@ -138,26 +144,26 @@ function renderTincturesView() {
         <form class="calc-card" id="diluteCalc" onsubmit="return false">
           <h4>Разведение спирта водой</h4>
           <div class="calc-fields">
-            <label>Спирт, мл <input type="text" inputmode="decimal" name="volume" value="1000"></label>
-            <label>Его крепость, % <input type="text" inputmode="decimal" name="from" value="96"></label>
-            <label>Нужно, % <input type="text" inputmode="decimal" name="to" value="40"></label>
+            <label>Спирт, мл <input type="text" inputmode="decimal" name="volume" value="${esc(tnCalcValues.diluteCalc.volume)}"></label>
+            <label>Его крепость, % <input type="text" inputmode="decimal" name="from" value="${esc(tnCalcValues.diluteCalc.from)}"></label>
+            <label>Нужно, % <input type="text" inputmode="decimal" name="to" value="${esc(tnCalcValues.diluteCalc.to)}"></label>
           </div>
-          <p class="calc-result" id="diluteResult"></p>
-          <p class="hint">Учтено сжатие смеси: вода и спирт вместе дают меньший объём, чем по отдельности. Расчёт по плотности водно-спиртовых смесей при 20 °C, сверен с таблицей Фертмана. Спирт и воду — при комнатной температуре; вливайте спирт в воду.</p>
+          <p class="calc-result" id="diluteResult" aria-live="polite"></p>
+          <p class="hint">С учётом сжатия смеси, при 20 °C; сверено с таблицей Фертмана. Вливайте спирт в воду.</p>
         </form>
         <form class="calc-card" id="mixCalc" onsubmit="return false">
           <h4>Крепость после сиропа, сока, ягод</h4>
           <div class="calc-fields">
-            <label>Основа, мл <input type="text" inputmode="decimal" name="spiritVolume" value="500"></label>
-            <label>Крепость основы, % <input type="text" inputmode="decimal" name="spiritAbv" value="40"></label>
-            <label>Сахар в сиропе, г <input type="text" inputmode="decimal" name="syrupSugar" value="0"></label>
-            <label>Вода в сиропе, мл <input type="text" inputmode="decimal" name="syrupWater" value="0"></label>
-            <label>Сок или вода, мл <input type="text" inputmode="decimal" name="juice" value="0"></label>
-            <label>Ягоды, г <input type="text" inputmode="decimal" name="berries" value="0"></label>
-            <label>Ягоды отдадут сока, % <input type="text" inputmode="decimal" name="berryJuicePercent" value="50"></label>
+            <label>Основа, мл <input type="text" inputmode="decimal" name="spiritVolume" value="${esc(tnCalcValues.mixCalc.spiritVolume)}"></label>
+            <label>Крепость основы, % <input type="text" inputmode="decimal" name="spiritAbv" value="${esc(tnCalcValues.mixCalc.spiritAbv)}"></label>
+            <label>Сахар в сиропе, г <input type="text" inputmode="decimal" name="syrupSugar" value="${esc(tnCalcValues.mixCalc.syrupSugar)}"></label>
+            <label>Вода в сиропе, мл <input type="text" inputmode="decimal" name="syrupWater" value="${esc(tnCalcValues.mixCalc.syrupWater)}"></label>
+            <label>Сок или вода, мл <input type="text" inputmode="decimal" name="juice" value="${esc(tnCalcValues.mixCalc.juice)}"></label>
+            <label>Ягоды, г <input type="text" inputmode="decimal" name="berries" value="${esc(tnCalcValues.mixCalc.berries)}"></label>
+            <label>Ягоды отдадут сока, % <input type="text" inputmode="decimal" name="berryJuicePercent" value="${esc(tnCalcValues.mixCalc.berryJuicePercent)}"></label>
           </div>
-          <p class="calc-result" id="mixResult"></p>
-          <p class="hint">Оценка: сахар из сока и ягод не учитывается, сколько сока отдадут ягоды — зависит от ягоды и срока. Точную крепость покажет спиртомер после процеживания (при 20 °C, без сахара — сахар искажает показания).</p>
+          <p class="calc-result" id="mixResult" aria-live="polite"></p>
+          <p class="hint">Оценка: сахар из сока и ягод не учитывается. Спиртомер показывает верно только в чистой водно-спиртовой смеси при 20 °C — в настойке на ягодах и в сладкой он занижает крепость.</p>
         </form>
       </div>
     </section>`;
@@ -178,8 +184,9 @@ function bottleItem(b, today) {
     stage !== "finished" && stage !== "ready" ? `готова ${ruDate(ready)}` : ""
   ].filter(Boolean).join(" · ");
   const actions = [
-    stage === "strain-due" || stage === "infusing" ? `<button type="button" class="btn btn-secondary btn-small" data-act="strained" data-id="${b.id}">Процедил</button>` : "",
+    stage === "strain-due" || stage === "infusing" ? `<button type="button" class="btn btn-secondary btn-small" data-act="strained" data-id="${b.id}">Процежена</button>` : "",
     stage !== "finished" ? `<button type="button" class="btn btn-secondary btn-small" data-act="finished" data-id="${b.id}">Выпита</button>` : "",
+    `<button type="button" class="btn btn-secondary btn-small" data-act="edit-bottle" data-id="${b.id}">Изменить</button>`,
     `<button type="button" class="btn-icon" data-act="del-bottle" data-id="${b.id}" aria-label="Удалить запись" title="Удалить запись">✕</button>`
   ].join("");
   return `<li class="bottle bottle-${stage}">
@@ -196,7 +203,7 @@ function bottleItem(b, today) {
 function tinctureRecipeItem(r) {
   const open = openTinctureId === r.id;
   const base = [r.base, r.baseAbv ? `${formatAmount(r.baseAbv)} %` : "", r.baseVolume ? `${formatAmount(r.baseVolume)} мл` : ""].filter(Boolean).join(", ");
-  const terms = `${r.infuseDays || 0} дн. настаивать` + (r.restDays ? ` + ${r.restDays} дн. отдыха` : "");
+  const terms = `настаивать ${r.infuseDays || 0} дн.` + (r.restDays ? `, отдых ${r.restDays} дн.` : "");
   const details = open ? `
     <div class="tn-details">
       ${(r.ingredients || []).length ? `<ul class="tn-ings">${r.ingredients.map(i =>
@@ -244,8 +251,11 @@ function updateMixCalc() {
 }
 
 function onTincturePageInput(e) {
-  if (e.target.closest("#diluteCalc")) updateDiluteCalc();
-  if (e.target.closest("#mixCalc")) updateMixCalc();
+  const form = e.target.closest("#diluteCalc, #mixCalc");
+  if (!form || !e.target.name) return;
+  tnCalcValues[form.id][e.target.name] = e.target.value;
+  if (form.id === "diluteCalc") updateDiluteCalc();
+  else updateMixCalc();
 }
 
 // --- Действия ---
@@ -270,10 +280,13 @@ function onTincturePageClick(e) {
       data.recipes = data.recipes.filter(x => x.id !== id);
       break;
     }
+    case "edit-bottle": return openBottleForm(null, data.bottles.find(x => x.id === id));
     case "strained":
     case "finished": {
       const b = data.bottles.find(x => x.id === id);
       if (!b) return;
+      const question = btn.dataset.act === "strained" ? `Отметить «${b.title}» процеженной сегодня?` : `Отметить «${b.title}» выпитой?`;
+      if (!confirm(question)) return;
       b[btn.dataset.act] = true;
       if (btn.dataset.act === "strained") b.strainedOn = todayIso();
       b.updatedAt = new Date().toISOString();
@@ -300,15 +313,18 @@ function addTinctureIngredientRow(ing = { name: "", amount: "", unit: "г" }) {
   name.className = "tn-ing-name";
   name.placeholder = "Хрен, мёд, лимонная цедра…";
   name.value = ing.name;
+  name.setAttribute("aria-label", "Ингредиент");
   const amount = document.createElement("input");
   amount.type = "text";
   amount.className = "tn-ing-amount";
   amount.placeholder = "1/2";
   amount.value = ing.amount === "" ? "" : formatAmount(Number(ing.amount) || 0, false);
+  amount.setAttribute("aria-label", "Количество");
   const unit = document.createElement("select");
   unit.className = "tn-ing-unit";
   TINCTURE_UNITS.forEach(u => unit.appendChild(new Option(u, u)));
   unit.value = ing.unit || "г";
+  unit.setAttribute("aria-label", "Единица");
   const remove = document.createElement("button");
   remove.type = "button";
   remove.className = "btn-icon";
@@ -341,7 +357,7 @@ function openTinctureForm(recipe) {
   el("tnSteps").value = r.steps || "";
   el("tnNotes").value = r.notes || "";
   (r.ingredients && r.ingredients.length ? r.ingredients : [undefined]).forEach(i => addTinctureIngredientRow(i));
-  el("tinctureModal").classList.remove("hidden");
+  openModal(el("tinctureModal"));
 }
 
 function saveTinctureRecipe(e) {
@@ -372,23 +388,31 @@ function saveTinctureRecipe(e) {
   else data.recipes.push(recipe);
   saveSection("tinctures", data);
   openTinctureId = recipe.id;
-  el("tinctureModal").classList.add("hidden");
+  closeModal(el("tinctureModal"), true);
   renderTincturesView();
 }
 
 // --- Форма бутылки ---
 
-function openBottleForm(recipe) {
-  el("bottleForm").reset();
-  el("bottleForm").dataset.recipeId = recipe ? recipe.id : "";
-  el("btTitle").value = recipe ? recipe.title : "";
-  el("btStart").value = todayIso();
-  el("btVolume").value = recipe && recipe.baseVolume ? formatAmount(recipe.baseVolume, false) : "";
-  el("btAbv").value = recipe && recipe.baseAbv ? formatAmount(recipe.baseAbv, false) : "";
-  el("btInfuse").value = recipe ? recipe.infuseDays || "" : "";
-  el("btRest").value = recipe ? recipe.restDays || "" : "";
+function openBottleForm(recipe, bottle) {
+  const form = el("bottleForm");
+  form.reset();
+  form.dataset.recipeId = recipe ? recipe.id : (bottle && bottle.recipeId) || "";
+  form.dataset.id = bottle ? bottle.id : "";
+  el("bottleModalTitle").textContent = bottle ? "Изменить запись" : "Заложить бутылку";
+  el("bottleSubmit").textContent = bottle ? "Сохранить" : "Заложить";
+  const src = bottle || {};
+  el("btTitle").value = bottle ? src.title : recipe ? recipe.title : "";
+  el("btStart").value = bottle ? src.startDate : todayIso();
+  const vol = bottle ? src.volume : recipe && recipe.baseVolume;
+  const abv = bottle ? src.abv : recipe && recipe.baseAbv;
+  el("btVolume").value = vol ? formatAmount(vol, false) : "";
+  el("btAbv").value = abv ? formatAmount(abv, false) : "";
+  el("btInfuse").value = bottle ? src.infuseDays : recipe ? recipe.infuseDays || "" : "";
+  el("btRest").value = bottle ? src.restDays : recipe ? recipe.restDays || "" : "";
+  el("btNotes").value = bottle ? src.notes || "" : "";
   updateBottleDates();
-  el("bottleModal").classList.remove("hidden");
+  openModal(el("bottleModal"));
 }
 
 function updateBottleDates() {
@@ -404,22 +428,22 @@ function updateBottleDates() {
 function saveBottle(e) {
   e.preventDefault();
   const num = id => parseAmount(el(id).value) || 0;
+  const form = el("bottleForm");
   const data = loadSection("tinctures");
-  data.bottles.push({
-    id: newId("bt"),
+  const fields = {
     title: el("btTitle").value.trim(),
-    recipeId: el("bottleForm").dataset.recipeId || null,
     startDate: el("btStart").value,
     volume: num("btVolume"),
     abv: num("btAbv"),
     infuseDays: Math.round(num("btInfuse")),
     restDays: Math.round(num("btRest")),
     notes: el("btNotes").value.trim(),
-    strained: false,
-    finished: false,
     updatedAt: new Date().toISOString()
-  });
+  };
+  const existing = data.bottles.find(b => b.id === form.dataset.id);
+  if (existing) Object.assign(existing, fields);
+  else data.bottles.push({ id: newId("bt"), recipeId: form.dataset.recipeId || null, strained: false, finished: false, ...fields });
   saveSection("tinctures", data);
-  el("bottleModal").classList.add("hidden");
+  closeModal(el("bottleModal"), true);
   renderTincturesView();
 }

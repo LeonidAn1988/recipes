@@ -74,7 +74,7 @@ function initRecipesUi() {
   el("recipeForm").addEventListener("submit", handleRecipeSubmit);
 
   el("recipeModal").addEventListener("click", e => {
-    if (e.target === el("recipeModal")) closeRecipeModal();
+    // Клик по фону обрабатывает общий менеджер окон (app.js): форму не теряем.
   });
 }
 
@@ -504,6 +504,14 @@ function renderVideo(recipe) {
   section.classList.remove("hidden");
 
   const url = extractVideoUrl(recipe.video);
+  // Книга синхронизируется между устройствами: чужая ссылка вида
+  // javascript:… не должна исполниться. Пропускаем только http(s).
+  let safe = false;
+  try { safe = ["http:", "https:"].includes(new URL(url).protocol); } catch {}
+  if (!safe) {
+    section.classList.add("hidden");
+    return;
+  }
   const embed = videoEmbedUrl(url);
   if (embed) {
     const iframe = document.createElement("iframe");
@@ -512,6 +520,7 @@ function renderVideo(recipe) {
     iframe.allowFullscreen = true;
     iframe.loading = "lazy";
     iframe.referrerPolicy = "strict-origin-when-cross-origin";
+    iframe.title = "Видео: " + recipe.title;
     wrap.appendChild(iframe);
   } else if (isDirectVideoFile(url)) {
     const video = document.createElement("video");
@@ -609,12 +618,34 @@ function renderRecipesView() {
 // одинаково мышью и пальцем; у ручки touch-action: none — пока её тянут,
 // страница не прокручивается. Порядок берётся прямо из DOM при сохранении,
 // так что достаточно переставить узел. У края окна список прокручивается сам.
+// Короткое сообщение для экранного диктора (live-регион в index.html).
+function announce(text) {
+  const live = document.getElementById("liveAnnouncer");
+  if (!live) return;
+  live.textContent = "";
+  requestAnimationFrame(() => { live.textContent = text; });
+}
+
 function dragHandle(row, what, onDrop) {
-  const handle = document.createElement("span");
+  // Кнопка, а не просто значок: с клавиатуры строку двигают стрелками ↑ ↓
+  // (WCAG 2.5.7 — у перетаскивания должна быть альтернатива).
+  const handle = document.createElement("button");
+  handle.type = "button";
   handle.className = "drag-handle";
   handle.textContent = "⠿";
-  handle.title = `Потяните, чтобы переместить ${what}`;
-  handle.setAttribute("aria-hidden", "true");
+  handle.title = `Потяните или нажмите ↑ ↓, чтобы переместить ${what}`;
+  handle.setAttribute("aria-label", `Переместить ${what}: стрелки вверх и вниз`);
+  handle.addEventListener("keydown", e => {
+    if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
+    e.preventDefault();
+    const sibling = e.key === "ArrowUp" ? row.previousElementSibling : row.nextElementSibling;
+    if (!sibling) return;
+    row.parentNode.insertBefore(row, e.key === "ArrowUp" ? sibling : sibling.nextElementSibling);
+    handle.focus();
+    const rows = [...row.parentNode.children];
+    announce(`Позиция ${rows.indexOf(row) + 1} из ${rows.length}`);
+    if (onDrop) onDrop();
+  });
 
   let scroller = null;
   let lastY = 0;

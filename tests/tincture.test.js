@@ -30,7 +30,7 @@ const m = A.mixTincture({ spiritVolume: 1000, spiritAbv: 95, water: 1443 });
 check("смешивание = разведению Фертмана", m.abv, 40, 0.3);
 // Сироп понижает крепость и даёт сахар г/л.
 const s = A.mixTincture({ spiritVolume: 500, spiritAbv: 40, syrupSugar: 100, syrupWater: 100 });
-check("сироп: крепость ниже 40", s.abv, 31.6, 1.5);
+check("сироп: крепость ниже 40", s.abv, 30.2, 0.3);
 check("сироп: сахар г/л", s.sugarPerLiter, 150, 12);
 // Сроки.
 const sch = A.tinctureSchedule("2026-09-01", 14, 30);

@@ -5,7 +5,7 @@
 const THEME_KEY = "recipes.theme";
 
 const THEMES = [
-  { id: "modern", label: "Современная кухня", desc: "Чисто и спокойно; тёмная — по настройке телефона", swatch: ["#faf7f2", "#c9622f", "#2e2620"] },
+  { id: "modern", label: "Современная кухня", desc: "Чисто и спокойно; тёмная, если она включена на устройстве", swatch: ["#faf7f2", "#b4541f", "#2e2620"] },
   { id: "notebook", label: "Бабушкина тетрадь", desc: "Клетка, чернила, рукописные заголовки", swatch: ["#f8fafd", "#2c52a0", "#1d2842"], font: "Neucha" },
   { id: "oldbook", label: "Старая поваренная книга", desc: "Антиква, красная печать, линейки", swatch: ["#efe7d7", "#7a1919", "#2a1c12"], font: "PT+Serif:ital,wght@0,400;0,700;1,400" },
   { id: "scandi", label: "Скандинавский минимализм", desc: "Воздух, берёза, хвойный акцент", swatch: ["#fafaf8", "#3f6b55", "#20262b"], font: "Manrope:wght@400;600;800" }

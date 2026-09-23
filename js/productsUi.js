@@ -43,7 +43,7 @@ function initProductsUi() {
   });
 
   el("productModal").addEventListener("click", e => {
-    if (e.target === el("productModal")) closeProductModal();
+    // Клик по фону обрабатывает общий менеджер окон (app.js): форму не теряем.
   });
 
   fillCategoryFilter();

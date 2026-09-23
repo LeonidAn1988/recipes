@@ -8,6 +8,8 @@
   --accent: #b4541f;
   --accent-hover: #9a4719;
   --accent-ink: var(--accent);
+  --input-border: #9c8f7e;
+  --fav: #8a6408;
   --danger: #c0392b;
   --protein: #3d7ea6;
   --fat: #d99b30;
@@ -39,6 +41,8 @@
     --accent: #b85a25;
     --accent-hover: #c86a33;
     --accent-ink: #e2823f;
+    --input-border: #7d6f5e;
+    --fav: #e0b341;
     --danger: #e2564a;
     --protein: #6fb3d9;
     --fat: #edb75c;
@@ -1160,9 +1164,9 @@ body.is-dragging * { cursor: grabbing !important; user-select: none; -webkit-use
 /* ───────── Профили, избранное, настройки ───────── */
 
 .profile-chip-empty { border-style: dashed; }
-.chip-fav.active { background: #d9a520; border-color: #d9a520; color: #1c1917; }
-.fav-mark { color: #d9a520; }
-#favoriteBtn.is-fav { color: #b8860b; border-color: #d9a520; }
+.chip-fav.active { background: #e0b341; border-color: #c99a24; color: #1c1917; }
+.fav-mark { color: var(--fav); }
+#favoriteBtn.is-fav { color: var(--fav); border-color: #c99a24; }
 .settings-block { margin-bottom: 1.3rem; }
 .settings-block h3 { font-size: 0.95rem; margin: 0 0 0.6rem; }
 .settings-message {
@@ -1172,7 +1176,7 @@ body.is-dragging * { cursor: grabbing !important; user-select: none; -webkit-use
   border-radius: var(--radius);
 }
 .chip-row { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; }
-.member-item { display: inline-flex; align-items: center; gap: 0.1rem; }
+.member-item { display: inline-flex; align-items: center; gap: 0.45rem; margin-right: 0.3rem; }
 .inline-form { display: flex; gap: 0.4rem; margin-top: 0.6rem; }
 .inline-form input {
   flex: 1;
@@ -1216,6 +1220,8 @@ html[data-theme="notebook"] {
   --accent: #2c52a0;
   --accent-hover: #21417f;
   --accent-ink: var(--accent);
+  --input-border: #8494b3;
+  --fav: #8a6408;
   --danger: #b3261e;
   --radius: 6px;
   --shadow: 0 1px 3px rgba(29, 40, 66, 0.10);
@@ -1249,6 +1255,8 @@ html[data-theme="oldbook"] {
   --accent: #8b1d1d;
   --accent-hover: #6e1515;
   --accent-ink: var(--accent);
+  --input-border: #9a8462;
+  --fav: #8a6408;
   --danger: #8b1d1d;
   --radius: 2px;
   --shadow: 0 1px 0 rgba(42, 28, 18, 0.12);
@@ -1285,6 +1293,8 @@ html[data-theme="scandi"] {
   --accent: #3f6b55;
   --accent-hover: #325745;
   --accent-ink: var(--accent);
+  --input-border: #948e82;
+  --fav: #8a6408;
   --danger: #b0413e;
   --radius: 14px;
   --shadow: 0 6px 24px rgba(32, 38, 43, 0.06);
@@ -1355,7 +1365,8 @@ html[data-theme="oldbook"] .btn { border-radius: 2px; }
   border-radius: var(--radius);
   background: var(--surface);
 }
-.bottle-finished { opacity: 0.62; }
+.bottle-finished { background: var(--surface-alt); }
+.bottle-finished .bottle-title { text-decoration: line-through; text-decoration-thickness: 1px; }
 .bottle-main { min-width: 0; flex: 1 1 16rem; }
 .bottle-title { font-weight: 600; margin-right: 0.4rem; }
 .bottle-facts, .bottle-notes { font-size: 0.82rem; color: var(--text-muted); margin-top: 0.2rem; }
@@ -1425,3 +1436,79 @@ html[data-theme="oldbook"] .btn { border-radius: 2px; }
   #tnIngredients td:nth-child(2) { grid-column: 2 / -1; }
   #tnIngredients .tn-ing-amount { width: 100%; }
 }
+
+/* ───────── Автоклав ───────── */
+
+.safety {
+  margin-top: 1rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--level-high);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--level-high) 7%, var(--surface));
+}
+.safety summary { cursor: pointer; font-weight: 600; color: var(--level-high); }
+.safety ul { margin: 0.6rem 0 0; padding-left: 1.1rem; line-height: 1.5; }
+.safety li + li { margin-top: 0.35rem; }
+.canning-fields .span-2 { grid-column: 1 / -1; }
+.canning-fields select {
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.95rem;
+}
+.gauge-choice { border: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 0.3rem 1.2rem; }
+.gauge-choice legend { font-size: 0.78rem; color: var(--text-muted); padding: 0; margin-bottom: 0.3rem; }
+.verdict {
+  margin: 1rem 0 0.6rem;
+  padding: 0.8rem 1rem;
+  border-radius: var(--radius);
+  background: var(--surface-alt);
+}
+.verdict-main { font-size: 1.05rem; }
+.verdict-time, .verdict-psi { font-size: 1.5rem; font-weight: 700; color: var(--text); }
+.verdict-stop {
+  border: 1px solid var(--level-high);
+  background: color-mix(in srgb, var(--level-high) 8%, var(--surface));
+  line-height: 1.5;
+}
+.verdict-stop strong { color: var(--level-high); }
+.canning-steps { padding-left: 1.2rem; line-height: 1.55; margin: 0.6rem 0; }
+.canning-steps li + li { margin-top: 0.3rem; }
+.muted { color: var(--text-muted); }
+.gauge-choice label {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+.visually-hidden {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  overflow: hidden; clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.drag-handle { border: none; background: transparent; padding: 0; font-family: inherit; }
+.drag-handle:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 1px; }
+
+/* Рамки полей ввода — контраст не ниже 3:1 к фону (WCAG 1.4.11). */
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]),
+select,
+textarea { border-color: var(--input-border) !important; }
+
+.profile-chip { max-width: 9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.jar-counter { display: inline-flex; align-items: center; gap: 0.2rem; font-size: 0.85rem; white-space: nowrap; }
+
+@media (max-width: 760px) {
+  /* Цели нажатия не меньше 32 px; крестик не должен прилипать к соседу. */
+  .btn-icon { min-width: 2rem; min-height: 2rem; }
+  /* Вкладки листаются вбок — показываем это растворением у правого края. */
+  .app-nav {
+    -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent);
+    mask-image: linear-gradient(90deg, #000 85%, transparent);
+  }
+}
+.app-nav.nav-at-end { -webkit-mask-image: none; mask-image: none; }

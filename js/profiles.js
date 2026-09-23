@@ -5,6 +5,8 @@
 // каждом устройстве и хранится только в нём (PROFILE_KEY).
 
 const PROFILE_KEY = "recipes.profile";
+// Рецепт, который хотели отметить до выбора профиля, — отметим сразу после.
+let pendingFavorite = null;
 
 function loadProfiles() {
   return loadSection("profiles");
@@ -19,6 +21,11 @@ function setCurrentMember(id) {
   if (id) localStorage.setItem(PROFILE_KEY, id);
   else localStorage.removeItem(PROFILE_KEY);
   updateProfileChip();
+  if (id && pendingFavorite) {
+    const recipeId = pendingFavorite;
+    pendingFavorite = null;
+    if (!isFavorite(recipeId)) toggleFavorite(recipeId);
+  }
 }
 
 function addMember(name) {
@@ -54,6 +61,7 @@ function isFavorite(recipeId) {
 function toggleFavorite(recipeId) {
   const me = currentMember();
   if (!me) {
+    pendingFavorite = recipeId;
     openSettings("Чтобы отмечать избранное, выберите, кто вы, или добавьте своё имя.");
     return false;
   }
@@ -138,12 +146,15 @@ function renderMemberList() {
 
     const chip = document.createElement("button");
     chip.type = "button";
-    chip.className = "chip" + (me && me.id === m.id ? " active" : "");
+    const isMe = Boolean(me && me.id === m.id);
+    chip.className = "chip" + (isMe ? " active" : "");
+    chip.setAttribute("aria-pressed", String(isMe));
     const count = (favorites[m.id] || []).length;
     chip.textContent = m.name + (count ? ` · ★ ${count}` : "");
-    chip.title = me && me.id === m.id ? "Это вы на этом устройстве" : "Выбрать: это я";
+    chip.title = isMe ? "Это вы на этом устройстве" : "Это я";
     chip.addEventListener("click", () => {
-      setCurrentMember(me && me.id === m.id ? null : m.id);
+      if (isMe) return;
+      setCurrentMember(m.id);
       renderMemberList();
       render();
     });
@@ -152,10 +163,10 @@ function renderMemberList() {
     del.type = "button";
     del.className = "btn-icon";
     del.textContent = "✕";
-    del.title = `Удалить «${m.name}» и его избранное`;
+    del.title = `Удалить «${m.name}» вместе с избранным`;
     del.setAttribute("aria-label", del.title);
     del.addEventListener("click", () => {
-      if (!confirm(`Удалить «${m.name}» из книги? Его избранное тоже удалится у всех устройств.`)) return;
+      if (!confirm(`Удалить «${m.name}» вместе с избранным? Оно удалится на всех устройствах.`)) return;
       removeMember(m.id);
       renderMemberList();
       render();
