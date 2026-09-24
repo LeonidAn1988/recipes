@@ -300,6 +300,7 @@ function onTincturePageClick(e) {
       const r = data.recipes.find(x => x.id === id);
       if (!r || !confirm(`Удалить рецепт «${r.title}»? Записи в журнале бутылок останутся.`)) return;
       data.recipes = data.recipes.filter(x => x.id !== id);
+      addTombstone(id);
       break;
     }
     case "edit-bottle": return openBottleForm(null, data.bottles.find(x => x.id === id));
@@ -318,6 +319,7 @@ function onTincturePageClick(e) {
       const b = data.bottles.find(x => x.id === id);
       if (!b || !confirm(`Удалить запись «${b.title}» из журнала?`)) return;
       data.bottles = data.bottles.filter(x => x.id !== id);
+      addTombstone(id);
       break;
     }
     default: return;

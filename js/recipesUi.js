@@ -98,6 +98,7 @@ function initRecipesUi() {
     if (!recipe) return;
     if (!confirm(`Удалить рецепт «${recipe.title}»?`)) return;
     recipes = recipes.filter(r => r.id !== selectedId);
+    addTombstone(selectedId);
     removeRecipeFromMenu(selectedId);
     forgetRecipeInFavorites(selectedId);
     selectedId = null;
@@ -1118,6 +1119,7 @@ function handleRecipeSubmit(e) {
   };
 
   const idx = id ? recipes.findIndex(r => r.id === id) : -1;
+  data.updatedAt = new Date().toISOString();
   if (idx !== -1) {
     recipes[idx] = { ...recipes[idx], ...data };
     selectedId = id;

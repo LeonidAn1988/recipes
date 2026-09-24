@@ -37,7 +37,7 @@ function addMember(name) {
   const data = loadProfiles();
   const existing = data.members.find(m => m.name.toLowerCase() === clean.toLowerCase());
   if (existing) return existing;
-  const member = { id: newId("m"), name: clean };
+  const member = { id: newId("m"), name: clean, updatedAt: new Date().toISOString() };
   data.members.push(member);
   saveSection("profiles", data);
   return member;
@@ -46,6 +46,7 @@ function addMember(name) {
 function removeMember(id) {
   const data = loadProfiles();
   data.members = data.members.filter(m => m.id !== id);
+  addTombstone(id);
   delete data.favorites[id];
   saveSection("profiles", data);
   if (localStorage.getItem(PROFILE_KEY) === id) setCurrentMember(null);
@@ -68,6 +69,7 @@ function saveMemberTheme(themeId) {
   const member = data.members.find(m => m.id === me.id);
   if (!member || member.theme === themeId) return;
   member.theme = themeId;
+  member.updatedAt = new Date().toISOString();
   saveSection("profiles", data);
 }
 

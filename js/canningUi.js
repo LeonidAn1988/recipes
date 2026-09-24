@@ -43,7 +43,7 @@ function initCanningUi() {
     const minutes = Math.round(parseAmount(val("minutes")));
     if (!(temp > 0) || !(minutes > 0)) return;
     const modes = canningSettings().makerModes;
-    const entry = { product: val("product"), jar: val("jar"), temp, minutes, note: val("note"), video: val("video") };
+    const entry = { product: val("product"), jar: val("jar"), temp, minutes, note: val("note"), video: val("video"), updatedAt: new Date().toISOString() };
     const existing = modes.find(m => m.id === f.dataset.editId);
     if (existing) Object.assign(existing, entry);
     else modes.push({ id: newId("mm"), createdBy: currentMemberId(), ...entry });
@@ -451,6 +451,7 @@ function onCanningClick(e) {
     const modes = canningSettings().makerModes;
     const m = modes.find(x => x.id === btn.dataset.id);
     if (!m || !confirm(`Удалить режим «${m.product}, ${m.jar}»?`)) return;
+    addTombstone(m.id);
     saveCanningSettings({ makerModes: modes.filter(x => x.id !== m.id) });
     return renderMakerModes();
   }
@@ -484,6 +485,7 @@ function onCanningClick(e) {
     case "del-batch":
       if (!b || !confirm(`Удалить запись о партии «${b.label}» от ${ruDate(b.date)}?`)) return;
       data.batches = data.batches.filter(x => x.id !== b.id);
+      addTombstone(b.id);
       break;
     default: return;
   }

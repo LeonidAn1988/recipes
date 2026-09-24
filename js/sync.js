@@ -12,14 +12,18 @@ const SYNC_KEYS = {
   token: "recipes.sync.token",
   gistId: "recipes.sync.gistId",
   updatedAt: "recipes.updatedAt",
-  dirty: "recipes.sync.dirty"
+  dirty: "recipes.sync.dirty",
+  // Версия облака (её updatedAt), с которой это устройство синхронизировалось
+  // последний раз. Если в облаке уже другая — сначала сливаем, потом пишем.
+  baseAt: "recipes.sync.baseAt"
 };
 
 // Ключи, которые составляют книгу и уезжают в облако.
 // Профиль устройства («кто я») и тема оформления — личные, в облако не идут.
 const SYNCED_KEYS = [
   STORAGE_KEYS.recipes, STORAGE_KEYS.products, STORAGE_KEYS.menu, STORAGE_KEYS.seeded,
-  STORAGE_KEYS.tinctures, STORAGE_KEYS.canning, STORAGE_KEYS.profiles, STORAGE_KEYS.planner
+  STORAGE_KEYS.tinctures, STORAGE_KEYS.canning, STORAGE_KEYS.profiles, STORAGE_KEYS.planner,
+  STORAGE_KEYS.tombstones
 ];
 
 const GIST_FILE = "recipes-book.json";
@@ -96,27 +100,8 @@ async function findExistingGist() {
 
 // --- Отправка и получение ---
 
-async function pushToCloud() {
-  clearTimeout(pushTimer);
-  if (!syncConfigured()) return;
-  setSyncState("pending");
-  try {
-    await gh("/gists/" + localStorage.getItem(SYNC_KEYS.gistId), {
-      method: "PATCH",
-      body: JSON.stringify({ files: { [GIST_FILE]: { content: JSON.stringify(snapshot()) } } })
-    });
-    localStorage.removeItem(SYNC_KEYS.dirty);
-    setSyncState("ok");
-  } catch (e) {
-    console.warn("Облачное сохранение:", e);
-    setSyncState("error", e.message);
-  }
-}
-
-// Сверяет локальную книгу с облачной. Если в облаке свежее — забирает её и
-// перезагружает страницу, чтобы все разделы перечитали данные.
-// Пока человек вводит текст или готовит по шагам, свежую книгу не
-// подменяем — проверим позже, при следующем возврате во вкладку.
+// Пока человек вводит текст или готовит по шагам, фоновые проверки облака
+// не трогают страницу (кроме первой загрузки и явных отправок).
 function syncBusy() {
   const a = document.activeElement;
   const typing = a && (/^(input|textarea|select)$/i.test(a.tagName)) && a.type !== "checkbox";
@@ -124,29 +109,60 @@ function syncBusy() {
   return Boolean(typing || cooking);
 }
 
-async function pullFromCloud() {
+function writeBookData(data, updatedAt) {
+  SYNCED_KEYS.forEach(k => {
+    const v = data[k];
+    if (v === null || v === undefined) localStorage.removeItem(k);
+    else localStorage.setItem(k, JSON.stringify(v));
+  });
+  localStorage.setItem(SYNC_KEYS.updatedAt, updatedAt);
+}
+
+let syncRunning = null;
+
+// Одна операция синхронизации за раз.
+function runSync(options) {
+  if (!syncRunning) syncRunning = syncWithCloud(options).finally(() => { syncRunning = null; });
+  return syncRunning;
+}
+
+function pushToCloud() {
+  clearTimeout(pushTimer);
+  return runSync({ force: true });
+}
+
+function pullFromCloud(options = {}) {
+  return runSync(options);
+}
+
+// Сверка с облаком:
+// • облако не менялось с нашей последней синхронизации — отправляем свои правки;
+// • облако менялось, своих правок нет — забираем облачную книгу;
+// • менялось и то и другое — сливаем по записям (merge.js) и отправляем итог.
+async function syncWithCloud({ force = false } = {}) {
   if (!syncConfigured()) return;
-  if (syncBusy()) return;
+  if (!force && syncBusy()) return;
+  const dirty = Boolean(localStorage.getItem(SYNC_KEYS.dirty));
+  if (dirty) setSyncState("pending");
   try {
     const book = await readGistBook(await gh("/gists/" + localStorage.getItem(SYNC_KEYS.gistId)));
-    const localAt = localStorage.getItem(SYNC_KEYS.updatedAt);
+    const base = localStorage.getItem(SYNC_KEYS.baseAt);
 
-    if (book && (!localAt || book.updatedAt > localAt)) {
-      if (syncBusy()) return;
-      const hadLocal = Boolean(localStorage.getItem(SYNC_KEYS.dirty));
-      const localPlanner = JSON.parse(localStorage.getItem(STORAGE_KEYS.planner) || "null");
-      applyCloudBook(book);
-      // Отметки «куплено» и кладовую объединяем: двое могли отмечать разом.
-      if (hadLocal && localPlanner && mergePlanner(localPlanner)) {
-        localStorage.setItem(SYNC_KEYS.dirty, "1");
-        setTimeout(pushToCloud, 500);
+    if (book && book.updatedAt !== base) {
+      if (dirty) {
+        const merged = mergeBooks(snapshot().data, book.data);
+        writeBookData(merged, new Date().toISOString());
+        localStorage.setItem(SYNC_KEYS.baseAt, book.updatedAt);
+        refreshAfterSync();
+        await writeToCloud();
+      } else {
+        applyCloudBook(book);
+        refreshAfterSync();
+        setSyncState("ok");
       }
-      if (typeof reloadAppState === "function") reloadAppState();
-      else location.reload();
-      setSyncState("ok");
       return;
     }
-    if (localStorage.getItem(SYNC_KEYS.dirty) || !book) await pushToCloud();
+    if (dirty || !book) await writeToCloud();
     else setSyncState("ok");
   } catch (e) {
     console.warn("Облачное сохранение:", e);
@@ -154,18 +170,23 @@ async function pullFromCloud() {
   }
 }
 
-// Сливает локальные отметки и кладовую в только что пришедшие из облака.
-// Возвращает true, если что-то добавилось (тогда нужно отправить обратно).
-function mergePlanner(local) {
-  const cloud = JSON.parse(localStorage.getItem(STORAGE_KEYS.planner) || "null") || { checked: {}, pantry: [], templates: [] };
-  const before = JSON.stringify(cloud);
-  cloud.checked = { ...(cloud.checked || {}), ...(local.checked || {}) };
-  cloud.pantry = [...new Set([...(cloud.pantry || []), ...(local.pantry || [])])];
-  const ids = new Set((cloud.templates || []).map(t => t.id));
-  cloud.templates = [...(cloud.templates || []), ...(local.templates || []).filter(t => !ids.has(t.id))];
-  if (JSON.stringify(cloud) === before) return false;
-  localStorage.setItem(STORAGE_KEYS.planner, JSON.stringify(cloud));
-  return true;
+async function writeToCloud() {
+  const snap = snapshot();
+  await gh("/gists/" + localStorage.getItem(SYNC_KEYS.gistId), {
+    method: "PATCH",
+    body: JSON.stringify({ files: { [GIST_FILE]: { content: JSON.stringify(snap) } } })
+  });
+  localStorage.setItem(SYNC_KEYS.baseAt, snap.updatedAt);
+  localStorage.removeItem(SYNC_KEYS.dirty);
+  setSyncState("ok");
+}
+
+// Данные в памяти страницы обновляем всегда (иначе следующее сохранение
+// формы записало бы устаревший список поверх слитого), а перерисовку —
+// только когда человек не вводит текст.
+function refreshAfterSync() {
+  if (typeof reloadAppState === "function") reloadAppState({ render: !syncBusy() });
+  else location.reload();
 }
 
 function applyCloudBook(book) {
@@ -175,6 +196,7 @@ function applyCloudBook(book) {
     else localStorage.setItem(k, JSON.stringify(v));
   });
   localStorage.setItem(SYNC_KEYS.updatedAt, book.updatedAt);
+  localStorage.setItem(SYNC_KEYS.baseAt, book.updatedAt);
   localStorage.removeItem(SYNC_KEYS.dirty);
 }
 
@@ -198,8 +220,10 @@ async function connectCloud(token) {
     const existing = await findExistingGist();
     if (existing) {
       localStorage.setItem(SYNC_KEYS.gistId, existing);
+      localStorage.removeItem(SYNC_KEYS.baseAt);
       closeSyncModal();
-      await pullFromCloud();
+      // Первое скачивание — всегда, даже если фокус остался в поле токена.
+      await pullFromCloud({ force: true });
       return;
     }
     if (!localStorage.getItem(SYNC_KEYS.updatedAt)) {
@@ -214,6 +238,7 @@ async function connectCloud(token) {
       })
     });
     localStorage.setItem(SYNC_KEYS.gistId, gist.id);
+    localStorage.setItem(SYNC_KEYS.baseAt, JSON.parse(gist.files[GIST_FILE].content).updatedAt);
     localStorage.removeItem(SYNC_KEYS.dirty);
     setSyncState("ok");
     closeSyncModal();
@@ -276,7 +301,8 @@ function initSync() {
   // Браузер может стереть данные сайта; просим оставить их.
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 
-  pullFromCloud();
+  // Первое скачивание при запуске — всегда.
+  pullFromCloud({ force: true });
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") pullFromCloud();
     else if (localStorage.getItem(SYNC_KEYS.dirty)) pushToCloud();

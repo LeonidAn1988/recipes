@@ -19,6 +19,7 @@ function initMenuUi() {
   el("clearMenuBtn").addEventListener("click", () => {
     if (menuItems.length === 0) return;
     if (!confirm("Очистить меню? Отметки «куплено» тоже снимутся.")) return;
+    menuItems.forEach(i => addTombstone("menu:" + i.recipeId));
     menuItems = [];
     saveMenu(menuItems);
     const planner = loadSection("planner");
@@ -60,6 +61,7 @@ function addRecipeToMenu(recipeId) {
   const defaultServings = parseServings(recipe.servings) || 1;
   const existing = menuItems.find(i => i.recipeId === recipeId);
 
+  clearTombstone("menu:" + recipeId);
   if (existing) existing.servings += defaultServings;
   else menuItems.push({ recipeId, servings: defaultServings });
 
@@ -69,6 +71,7 @@ function addRecipeToMenu(recipeId) {
 }
 
 function removeRecipeFromMenu(recipeId) {
+  addTombstone("menu:" + recipeId);
   menuItems = menuItems.filter(i => i.recipeId !== recipeId);
   saveMenu(menuItems);
 }
@@ -221,6 +224,7 @@ function renderMenuItems(items, day) {
     removeBtn.title = "Убрать из меню";
     removeBtn.addEventListener("click", () => {
       menuItems = menuItems.filter(i => i !== item);
+      addTombstone("menu:" + item.recipeId);
       saveMenu(menuItems);
       renderMenuView();
     });
@@ -444,12 +448,15 @@ function onTemplateAction(e) {
   if (btn.dataset.tpl === "del") {
     if (!confirm(`Удалить шаблон «${t.name}»?`)) return;
     planner.templates = planner.templates.filter(x => x.id !== t.id);
+    addTombstone(t.id);
     saveSection("planner", planner);
   } else if (!valid.length) {
     alert(`Все рецепты шаблона «${t.name}» удалены из книги — загружать нечего.`);
     return;
   } else if (btn.dataset.tpl === "load") {
     if (menuItems.length && !confirm(`Заменить текущее меню шаблоном «${t.name}»?`)) return;
+    menuItems.filter(m => !valid.some(i => i.recipeId === m.recipeId)).forEach(m => addTombstone("menu:" + m.recipeId));
+    valid.forEach(i => clearTombstone("menu:" + i.recipeId));
     menuItems = valid.map(i => ({ ...i }));
     saveMenu(menuItems);
     planner.checked = {};
@@ -457,6 +464,7 @@ function onTemplateAction(e) {
     if (valid.length < t.items.length) alert(`Пропущено удалённых рецептов: ${t.items.length - valid.length}.`);
   } else {
     valid.forEach(i => {
+      clearTombstone("menu:" + i.recipeId);
       const existing = menuItems.find(m => m.recipeId === i.recipeId);
       if (existing) existing.servings += i.servings;
       else menuItems.push({ ...i });

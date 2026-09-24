@@ -255,6 +255,7 @@ function addYieldToMenu() {
   const servings = Number(el("yieldToMenuBtn").dataset.servings);
   if (!recipe || !(servings > 0)) return;
 
+  clearTombstone("menu:" + recipe.id);
   const existing = menuItems.find(i => i.recipeId === recipe.id);
   if (existing) existing.servings += servings;
   else menuItems.push({ recipeId: recipe.id, servings });

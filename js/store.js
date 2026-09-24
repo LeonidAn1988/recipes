@@ -14,8 +14,25 @@ const STORAGE_KEYS = {
   tinctures: "recipes.tinctures",
   canning: "recipes.canning",
   profiles: "recipes.profiles",
-  planner: "recipes.planner"
+  planner: "recipes.planner",
+  tombstones: "recipes.tombstones"
 };
+
+// «Надгробия» удалённых записей: id → когда удалено. Нужны при слиянии книг
+// с разных устройств, чтобы удалённое не воскресало (см. merge.js).
+function addTombstone(id) {
+  if (!id) return;
+  const t = readJson(STORAGE_KEYS.tombstones, {});
+  t[id] = new Date().toISOString();
+  writeJson(STORAGE_KEYS.tombstones, t);
+}
+
+function clearTombstone(id) {
+  const t = readJson(STORAGE_KEYS.tombstones, {});
+  if (!(id in t)) return;
+  delete t[id];
+  writeJson(STORAGE_KEYS.tombstones, t);
+}
 
 // Разделы книги кроме рецептов: настойки, автоклав, профили семьи.
 // Хранятся объектами целиком; значение по умолчанию — пустая структура.
@@ -157,6 +174,7 @@ function upsertCustomProduct(product, originalName) {
 }
 
 function deleteCustomProduct(name) {
+  addTombstone("product:" + name);
   return saveCustomProducts(customProducts.filter(p => p.name !== name));
 }
 

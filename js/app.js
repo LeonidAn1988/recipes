@@ -283,7 +283,7 @@ function onModalKeydown(e) {
 
 // Перечитывает книгу из хранилища после прихода свежей версии из облака —
 // без перезагрузки страницы, чтобы не терять раздел, прокрутку и таймеры.
-function reloadAppState() {
+function reloadAppState({ render: doRender = true } = {}) {
   recipes = loadRecipes();
   menuItems = loadMenu();
   // Читаем без записи: запись пометила бы книгу изменённой и вернула её в облако.
@@ -292,7 +292,7 @@ function reloadAppState() {
   if (!recipes.some(r => r.id === selectedId)) selectedId = null;
   if (typeof updateProfileChip === "function") updateProfileChip();
   if (typeof initThemes === "function") initThemes();
-  render();
+  if (doRender) render();
 }
 
 function closeAnyModal() {
