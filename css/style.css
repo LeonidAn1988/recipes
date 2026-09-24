@@ -885,7 +885,7 @@ body {
 
 /* ───────── Мобильная вёрстка ───────── */
 
-@media (max-width: 760px) {
+@media screen and (max-width: 760px) {
   .app-header { padding: 0.7rem 1rem; gap: 0.6rem; }
   .app-header h1 { font-size: 1.1rem; }
   .header-actions { margin-left: 0; }
@@ -983,7 +983,7 @@ body {
 /* На телефоне строка ингредиента — в две линии: название на всю ширину,
    под ним количество, единица и кнопки. В одну линию название сжимается
    до пары букв. */
-@media (max-width: 760px) {
+@media screen and (max-width: 760px) {
   #recipeForm .form-table thead { display: none; }
   #formIngredients tr {
     display: grid;
@@ -1117,7 +1117,7 @@ body.is-dragging * { cursor: grabbing !important; user-select: none; -webkit-use
 /* На телефоне строки калькулятора — карточки: название сверху, под ним
    чистый вес, сколько взять до очистки и процент отходов. В таблицу
    колонка «взять» не помещалась и уезжала за край. */
-@media (max-width: 760px) {
+@media screen and (max-width: 760px) {
   #yieldResult .table-scroll { overflow: visible; border: none; }
   #yieldResult thead { display: none; }
   #yieldTable tr {
@@ -1144,7 +1144,7 @@ body.is-dragging * { cursor: grabbing !important; user-select: none; -webkit-use
 
 /* Узкие экраны (телефоны, внешний экран складных): форма рецепта без
    горизонтальной прокрутки и двойных рамок. */
-@media (max-width: 760px) {
+@media screen and (max-width: 760px) {
   .modal { padding: 0.5rem; }
   .modal-content { padding: 1rem; max-height: 94vh; }
   .form-block { padding: 0.7rem 0.7rem 0.8rem; }
@@ -1190,7 +1190,7 @@ body.is-dragging * { cursor: grabbing !important; user-select: none; -webkit-use
 }
 
 /* Шапка: на телефоне вкладки прокручиваются вбок, а не переносятся. */
-@media (max-width: 760px) {
+@media screen and (max-width: 760px) {
   .app-nav {
     justify-content: flex-start;
     overflow-x: auto;
@@ -1336,7 +1336,7 @@ html[data-theme="scandi"] .content { padding-top: 2rem; }
 html[data-theme="oldbook"] .chip,
 html[data-theme="oldbook"] .badge,
 html[data-theme="oldbook"] .btn { border-radius: 2px; }
-@media (max-width: 760px) {
+@media screen and (max-width: 760px) {
   /* В колонку flex-basis заголовка становится высотой — отключаем. */
   .detail-header h2 { flex: none; width: 100%; }
 }
@@ -1423,7 +1423,7 @@ html[data-theme="oldbook"] .btn { border-radius: 2px; }
 }
 .calc-result { font-size: 1rem; margin: 0.8rem 0 0.4rem; line-height: 1.45; }
 #tnIngredients .tn-ing-amount { width: 5rem; }
-@media (max-width: 760px) {
+@media screen and (max-width: 760px) {
   #tnIngredients tr {
     display: grid;
     grid-template-columns: auto 1fr 1fr auto;
@@ -1502,7 +1502,7 @@ textarea { border-color: var(--input-border) !important; }
 .profile-chip { max-width: 9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .jar-counter { display: inline-flex; align-items: center; gap: 0.2rem; font-size: 0.85rem; white-space: nowrap; }
 
-@media (max-width: 760px) {
+@media screen and (max-width: 760px) {
   /* Цели нажатия не меньше 32 px; крестик не должен прилипать к соседу. */
   .btn-icon { min-width: 2rem; min-height: 2rem; }
   /* Вкладки листаются вбок — показываем это растворением у правого края. */
@@ -1810,3 +1810,345 @@ button.step-time { min-height: 24px; }
 .cook .btn-icon, .timer-btn { min-width: 44px; min-height: 44px; font-size: 1rem; }
 .cook-tabs button { min-height: 44px; }
 .cook-check { min-height: 44px; }
+
+/* ═════════════════ Мобильный каркас (≤ 760 px) ═════════════════
+   На компьютере эти элементы скрыты. */
+.tab-bar, .mobile-back, .filters-btn, .active-filters, .ing-full-btn,
+.sheet-backdrop, .filters-sheet-head, .more-actions-btn { display: none; }
+.list-toolbar .search-input { width: 100%; }
+
+.collapsible > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; }
+.collapsible > summary::-webkit-details-marker { display: none; }
+.collapsible > summary h3 { margin: 0; }
+.collapsible > summary::after { content: "›"; font-size: 1.4rem; line-height: 1; color: var(--text-muted); transform: rotate(90deg); transition: transform 150ms ease-out; }
+.collapsible[open] > summary::after { transform: rotate(-90deg); }
+.collapsible[open] > summary { margin-bottom: 0.7rem; }
+
+@media screen and (max-width: 760px) {
+  /* Поля ввода 16 px: иначе iPhone приближает страницу при каждом касании. */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+  select, textarea { font-size: 16px !important; }
+
+  /* Шапка — одна тонкая строка. */
+  .app-header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+    padding: calc(0.45rem + env(safe-area-inset-top)) max(0.9rem, env(safe-area-inset-right)) 0.45rem max(0.9rem, env(safe-area-inset-left));
+  }
+  .app-header h1 { font-size: 1.1rem; flex: 1; min-width: 0; white-space: nowrap; }
+  .app-nav { display: none; }
+  .header-actions { flex-wrap: nowrap; margin-left: auto; gap: 0.35rem; }
+  #settingsBtn { display: none; }
+  #syncBtn .btn-label { display: none; }
+  #syncBtn { position: relative; min-width: 44px; min-height: 40px; font-size: 1.05rem; }
+  #syncBtn::after {
+    content: "";
+    position: absolute;
+    right: 6px;
+    top: 6px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--border);
+  }
+  #syncBtn[data-state="ok"]::after { background: var(--level-low); }
+  #syncBtn[data-state="pending"]::after { background: var(--level-medium); }
+  #syncBtn[data-state="error"]::after { background: var(--level-high); }
+  .profile-chip { max-width: 7.5rem; min-height: 40px; }
+
+  /* Нижняя панель вкладок. */
+  .tab-bar {
+    display: flex;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 25;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  .tab-bar button {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    min-height: 58px;
+    padding: 0.35rem 0 0.3rem;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font: inherit;
+    font-size: 0.7rem;
+    cursor: pointer;
+  }
+  .tab-bar svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .tab-bar button.active { color: var(--accent-ink); font-weight: 600; }
+  body { padding-bottom: calc(60px + env(safe-area-inset-bottom) + var(--timers-h, 0px)); }
+  .timer-bar { bottom: calc(68px + env(safe-area-inset-bottom)); }
+
+  /* Список рецептов. */
+  .sidebar { padding: 0.8rem max(0.9rem, env(safe-area-inset-left)) 1rem; border-bottom: none; }
+  .list-toolbar { display: flex; gap: 0.5rem; align-items: stretch; margin-bottom: 0.6rem; }
+  .list-toolbar .search-input { flex: 1; min-width: 0; margin: 0; }
+  .filters-btn { display: inline-flex; align-items: center; white-space: nowrap; min-height: 44px; }
+  .active-filters { display: flex; margin: 0 0 0.6rem; }
+  .active-filters.hidden { display: none; }
+  .recipe-item { min-height: 56px; padding-top: 0.7rem; padding-bottom: 0.7rem; }
+  #emptyState { display: none !important; }
+
+  /* Плавающая кнопка «+ Новый рецепт». */
+  #addRecipeBtn {
+    position: fixed;
+    right: max(1rem, env(safe-area-inset-right));
+    bottom: calc(72px + env(safe-area-inset-bottom) + var(--timers-h, 0px));
+    z-index: 24;
+    width: auto;
+    padding: 0.85rem 1.2rem;
+    border-radius: 999px;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
+    font-size: 1rem;
+  }
+
+  /* Лист фильтров снизу. */
+  .filters-panel {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 35;
+    max-height: 82dvh;
+    overflow-y: auto;
+    background: var(--surface);
+    border-radius: 16px 16px 0 0;
+    padding: 1rem max(1rem, env(safe-area-inset-right)) calc(1rem + env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.3);
+    transform: translateY(105%);
+    visibility: hidden;
+    transition: transform 240ms cubic-bezier(0.22, 1, 0.36, 1), visibility 0s linear 240ms;
+  }
+  body.filters-open .filters-panel { transform: none; visibility: visible; transition: transform 240ms cubic-bezier(0.22, 1, 0.36, 1); }
+  .sheet-backdrop { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 34; background: rgba(0, 0, 0, 0.45); }
+  body.filters-open .sheet-backdrop { display: block; }
+  .filters-sheet-head { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.9rem; }
+  .filters-sheet-head h2 { flex: 1; margin: 0; font-size: 1.15rem; font-family: var(--font-display); }
+  .filters-panel .chip { min-height: 36px; }
+
+  /* Рецепт — отдельный экран. */
+  .app-layout .content { display: none; padding: 0.6rem max(0.9rem, env(safe-area-inset-left)) 1rem; }
+  body.mobile-detail .sidebar { display: none; }
+  body.mobile-detail .app-layout .content { display: block; }
+  body.mobile-detail #addRecipeBtn { display: none; }
+  .mobile-back { display: block; margin-bottom: 0.6rem; }
+  .mobile-back .btn { min-height: 40px; }
+
+  /* Липкая панель действий рецепта вместо шапки из шести кнопок. */
+  body.mobile-detail .tab-bar { display: none; }
+  body.mobile-detail { padding-bottom: calc(80px + env(safe-area-inset-bottom) + var(--timers-h, 0px)); }
+  body.mobile-detail .timer-bar { bottom: calc(80px + env(safe-area-inset-bottom)); }
+  #recipeDetail .detail-actions {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 25;
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+    padding: 0.6rem max(0.9rem, env(safe-area-inset-right)) calc(0.6rem + env(safe-area-inset-bottom)) max(0.9rem, env(safe-area-inset-left));
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.12);
+  }
+  #recipeDetail #cookBtn { flex: 1; min-height: 48px; font-size: 1.05rem; }
+  #favoriteBtn, .more-actions-btn { display: inline-flex; align-items: center; justify-content: center; min-width: 48px; min-height: 48px; font-size: 1.2rem; }
+  #favoriteBtn .btn-label { display: none; }
+  #addToMenuBtn, #printRecipeBtn, #editRecipeBtn, #deleteRecipeBtn { display: none; }
+  #recipeDetail .detail-actions.more-open { flex-wrap: wrap; }
+  #recipeDetail .detail-actions.more-open :is(#addToMenuBtn, #printRecipeBtn, #editRecipeBtn, #deleteRecipeBtn) {
+    display: block;
+    order: -1;
+    flex: 1 1 100%;
+    min-height: 48px;
+    text-align: left;
+  }
+  .detail-header h2 { font-size: 1.45rem; }
+  .detail-image { width: 100%; max-width: none; border-radius: var(--radius); }
+
+  /* КБЖУ компактно: три значения в ряд. */
+  .nutrition-summary { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.4rem; }
+  .nutrition-card { padding: 0.55rem 0.5rem; }
+  .nutrition-card-title { font-size: 0.68rem; }
+  .nutrition-kcal { font-size: 1.05rem; }
+  .macro-row { flex-direction: column; gap: 0.1rem; }
+  .glycemic-block { gap: 0.4rem; }
+
+  /* Ингредиенты — список «продукт — количество»; КБЖУ по кнопке. */
+  .ing-full-btn { display: inline-flex; }
+  .ingredients-section .table-scroll { border: none; }
+  .ingredients-section:not(.full) .data-table :is(th, td):nth-child(n + 4) { display: none; }
+  .ingredients-section:not(.full) .data-table { font-size: 0.95rem; }
+  .ingredients-section:not(.full) .data-table td { padding-top: 0.55rem; padding-bottom: 0.55rem; }
+
+  /* Таблицы продуктов и блюд меню — карточками. */
+  .data-table.cardify thead { display: none; }
+  .data-table.cardify tbody tr {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.15rem 0.8rem;
+    padding: 0.7rem 0.2rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .data-table.cardify tbody td { padding: 0; border: none; text-align: left; }
+  .data-table.cardify tbody td::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+  }
+  .data-table.cardify tbody td:first-child { grid-column: 1 / -1; font-weight: 600; font-size: 1rem; }
+  .data-table.cardify tbody td:first-child::before,
+  .data-table.cardify tbody td.actions::before,
+  .data-table.cardify tbody td:empty::before { content: none; }
+  .data-table.cardify tbody td.actions { grid-column: 1 / -1; }
+  .data-table.cardify tfoot td:nth-child(n + 3) { display: none; }
+  .cardify-wrap, .page .table-scroll { border: none; overflow: visible; }
+
+  /* Окна — листы снизу; большие формы — на весь экран с липкими кнопками. */
+  .modal { padding: 0; align-items: flex-end; }
+  .modal-content {
+    width: 100%;
+    max-width: none;
+    max-height: 92dvh;
+    border-radius: 16px 16px 0 0;
+    padding: 1rem max(1rem, env(safe-area-inset-right)) calc(1rem + env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+  }
+  :is(#recipeModal, #productModal, #tinctureModal) .modal-content {
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+    padding-top: calc(1rem + env(safe-area-inset-top));
+  }
+  .modal-actions {
+    position: sticky;
+    bottom: calc(-1rem - env(safe-area-inset-bottom));
+    z-index: 2;
+    margin: 1rem -1rem 0;
+    padding: 0.7rem 1rem calc(0.7rem + env(safe-area-inset-bottom));
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+  }
+  .modal-actions .btn { min-height: 44px; }
+
+  .page { padding: 1rem max(0.9rem, env(safe-area-inset-left)); }
+  .page-head { flex-wrap: wrap; gap: 0.6rem; }
+}
+@media screen and (max-width: 760px) and (prefers-reduced-motion: reduce) {
+  .filters-panel { transition: none; }
+}
+@media screen and (max-width: 760px) {
+  .tab-bar svg.icon-dots { stroke-width: 3.4; }
+  .glycemic-block { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+.yield-controls > label { min-width: 0; }
+.yield-controls select { width: 100%; min-width: 0; max-width: 100%; text-overflow: ellipsis; }
+
+/* ───────── Правки мобильного каркаса по панели критиков ───────── */
+@media print {
+  .tab-bar, .mobile-back, .sheet-backdrop, .filters-panel, .list-toolbar, .active-filters,
+  #timerBar, .more-actions-btn, #ingFullBtn { display: none !important; }
+}
+
+/* Лист «Ещё» — строки навигации. */
+.more-list { display: flex; flex-direction: column; margin: 0 -0.25rem; }
+.more-item {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  width: 100%;
+  min-height: 54px;
+  padding: 0 0.25rem;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  font: inherit;
+  font-size: 1rem;
+  text-align: left;
+  cursor: pointer;
+}
+.more-item:last-child { border-bottom: 0; }
+.more-item svg { width: 22px; height: 22px; flex-shrink: 0; fill: none; stroke: var(--accent-ink); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.more-item:hover { background: var(--surface-alt); }
+
+.section-title { display: none; }
+.recipe-item:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: -2px; }
+
+@media screen and (max-width: 760px) {
+  /* Окна — поверх панелей; пока окно открыто, нижние панели и «+» прячем. */
+  .modal { z-index: 50; }
+  body.modal-open :is(.tab-bar, #addRecipeBtn, #recipeDetail .detail-actions) { display: none !important; }
+  /* Открыта клавиатура — фиксированные панели не висят над ней. */
+  body.kb-open :is(.tab-bar, #addRecipeBtn, #recipeDetail .detail-actions, #timerBar) { display: none !important; }
+
+  /* В шапке — название раздела; на экране рецепта шапку заменяет строка «‹ Название». */
+  .app-header h1 .brand { display: none; }
+  .section-title { display: inline; }
+  body.mobile-detail .app-header { display: none; }
+  .mobile-back {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: -0.6rem calc(-1 * max(0.9rem, env(safe-area-inset-left))) 0.6rem;
+    padding: calc(0.35rem + env(safe-area-inset-top)) max(0.5rem, env(safe-area-inset-right)) 0.35rem max(0.5rem, env(safe-area-inset-left));
+    background: var(--header-bg);
+    border-bottom: 1px solid var(--border);
+  }
+  .mobile-back .back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.15rem;
+    min-height: 44px;
+    padding: 0 0.5rem;
+    margin: 0;
+    border: 0;
+    background: none;
+    color: var(--accent-ink);
+    font: inherit;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+  .mobile-back .back-btn svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+  .mobile-back .back-title { flex: 1; min-width: 0; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--header-text); }
+
+  /* Нижние отступы: последний рецепт и низ страницы не уходят под «+» и панели. */
+  .recipe-list { padding-bottom: 88px; }
+  body { padding-bottom: calc(68px + env(safe-area-inset-bottom) + var(--timers-h, 0px)); }
+  .tab-bar button { font-size: 0.75rem; }
+
+  /* Кнопки в шапке листа фильтров — без лишнего верхнего отступа. */
+  .filters-sheet-head .btn-small { margin-top: 0; min-height: 40px; }
+
+  /* Меню «⋯» раскрывается вверх, порядок Tab совпадает с порядком на экране. */
+  #recipeDetail .detail-actions.more-open { flex-wrap: wrap-reverse; }
+  #recipeDetail .detail-actions.more-open :is(#addToMenuBtn, #printRecipeBtn, #editRecipeBtn, #deleteRecipeBtn) { order: 0; }
+
+  /* Статус облака: без точки, когда выключено; ошибка — «!», не только цвет. */
+  #syncBtn[data-state="off"]::after { content: none; }
+  #syncBtn::after { box-shadow: 0 0 0 2px var(--surface); }
+  #syncBtn[data-state="error"]::after {
+    content: "!";
+    width: 14px; height: 14px;
+    top: 2px; right: 2px;
+    font-size: 10px; line-height: 14px; font-weight: 700;
+    color: #fff; text-align: center;
+  }
+}

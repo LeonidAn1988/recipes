@@ -33,10 +33,22 @@ function applyTheme(id) {
   else document.documentElement.dataset.theme = theme.id;
   loadThemeFont(theme);
   try { localStorage.setItem(THEME_KEY, theme.id); } catch {}
+  syncThemeColor();
+}
+
+// Цвет строки состояния телефона — под фон шапки текущей темы.
+function syncThemeColor() {
+  requestAnimationFrame(() => {
+    const color = getComputedStyle(document.documentElement).getPropertyValue("--header-bg").trim()
+      || getComputedStyle(document.body).backgroundColor;
+    // Браузер берёт первую подходящую мету — обновляем все, включая с media.
+    document.querySelectorAll('meta[name="theme-color"]').forEach(meta => { meta.content = color; });
+  });
 }
 
 function initThemes() {
   el("themeBlock").classList.remove("hidden");
+  syncThemeColor();
   // Тема выбранного члена семьи могла смениться на другом устройстве.
   const me = typeof currentMember === "function" ? currentMember() : null;
   if (me && me.theme && me.theme !== currentThemeId()) applyTheme(me.theme);

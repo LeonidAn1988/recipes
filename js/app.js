@@ -75,6 +75,19 @@ function setView(name) {
     btn.setAttribute("aria-current", active ? "page" : "false");
     if (active) btn.scrollIntoView({ block: "nearest", inline: "nearest" });
   });
+  // Нижняя панель вкладок (телефон): «Продукты» живут во вкладке «Ещё».
+  document.querySelectorAll("#tabBar [data-tab-view]").forEach(btn => {
+    const v = btn.dataset.tabView;
+    const active = v === name || (v === "more" && name === "products");
+    btn.classList.toggle("active", active);
+    if (active) btn.setAttribute("aria-current", "page");
+    else btn.removeAttribute("aria-current");
+  });
+  if (typeof setFiltersOpen === "function" && document.body.classList.contains("filters-open")) setFiltersOpen(false);
+  if (name !== "recipes" && typeof leaveMobileDetail === "function") leaveMobileDetail();
+  const titles = { recipes: "Рецепты", products: "Продукты", menu: "Меню и покупки", tinctures: "Настойки", canning: "Автоклав" };
+  const titleEl = document.getElementById("sectionTitle");
+  if (titleEl) titleEl.textContent = titles[name] || "Рецепты";
   render();
 }
 
@@ -178,6 +191,7 @@ function init() {
   initCanningUi();
   initTimers();
   initCookMode();
+  initMobile();
   document.querySelectorAll(".modal").forEach(setupModal);
 
   try {
@@ -189,7 +203,7 @@ function init() {
       return;
     }
   } catch {}
-  render();
+  setView(activeView);
 }
 
 // --- Менеджер окон ---
@@ -229,6 +243,8 @@ function setupModal(modal) {
   new MutationObserver(() => {
     const hidden = modal.classList.contains("hidden");
     if (wasHidden && !hidden) {
+      document.body.classList.add("modal-open");
+      if (typeof overlayOpened === "function") overlayOpened();
       modal._opener = document.activeElement;
       modal.dataset.dirty = "";
       // setTimeout, а не requestAnimationFrame: rAF не срабатывает в скрытой вкладке.
@@ -236,8 +252,10 @@ function setupModal(modal) {
         const first = content && [...content.querySelectorAll(FOCUSABLE)].find(n => n.offsetParent !== null);
         (first || content).focus({ preventScroll: false });
       }, 0);
-    } else if (!wasHidden && hidden && modal._opener && document.contains(modal._opener)) {
-      modal._opener.focus();
+    } else if (!wasHidden && hidden) {
+      document.body.classList.toggle("modal-open", visibleModals().length > 0);
+      if (typeof overlayClosed === "function") overlayClosed();
+      if (modal._opener && document.contains(modal._opener)) modal._opener.focus();
     }
     wasHidden = hidden;
   }).observe(modal, { attributes: true, attributeFilter: ["class"] });

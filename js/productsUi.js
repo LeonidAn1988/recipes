@@ -118,6 +118,7 @@ function renderProductsView() {
       { node: editBtn, cls: "actions" }
     ]));
   });
+  labelTableCells(el("productsTableBody").closest("table"));
 }
 
 // --- Модалка продукта ---

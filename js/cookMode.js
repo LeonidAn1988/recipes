@@ -117,6 +117,7 @@ function openCookMode(recipe) {
     if (n.id !== "cookMode" && n.id !== "timerBar" && n.id !== "liveAnnouncer") n.inert = true;
   });
   requestWakeLock();
+  if (typeof overlayOpened === "function") overlayOpened();
   renderCook();
   setTimeout(() => el("cookMode").querySelector(".cook-close").focus(), 0);
 }
@@ -128,6 +129,7 @@ function closeCookMode() {
   [...document.body.children].forEach(n => { n.inert = false; });
   releaseWakeLock();
   cook = null;
+  if (typeof overlayClosed === "function") overlayClosed();
   if (typeof renderRecipesView === "function" && activeView === "recipes") renderRecipesView();
   if (cookOpener && document.contains(cookOpener)) cookOpener.focus();
 }

@@ -166,6 +166,7 @@ function renderMenuView() {
   if (items.length === 0) return;
 
   renderMenuItems(items, day);
+  labelTableCells(el("menuItemsBody").closest("table"));
   renderMenuSummary(day);
   renderShoppingList(shopping);
 }
@@ -202,6 +203,7 @@ function renderMenuItems(items, day) {
     titleBtn.addEventListener("click", () => {
       selectedId = recipe.id;
       setView("recipes");
+      if (typeof openMobileDetail === "function") openMobileDetail();
     });
 
     const servingsInput = document.createElement("input");

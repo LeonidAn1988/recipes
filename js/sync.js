@@ -283,8 +283,11 @@ function setSyncState(state, message) {
   syncState = state;
   const btn = document.getElementById("syncBtn");
   if (!btn) return;
-  const labels = { off: "Облако: выкл", ok: "☁ Сохранено", pending: "☁ Сохраняю…", error: "☁ Ошибка" };
-  btn.textContent = labels[state];
+  const labels = { off: "Облако: выкл", ok: "Сохранено", pending: "Сохраняю…", error: "Ошибка" };
+  // Значок и подпись раздельно: на телефоне остаётся только значок с точкой-статусом.
+  btn.innerHTML = `<span class="sync-icon" aria-hidden="true">☁</span><span class="btn-label">${labels[state]}</span>`;
+  btn.dataset.state = state;
+  btn.setAttribute("aria-label", "Облако: " + labels[state].toLowerCase());
   btn.title = message || (state === "off" ? "Включить сохранение книги в облако" : "Книга синхронизируется с облаком");
   btn.classList.toggle("sync-error", state === "error");
 }

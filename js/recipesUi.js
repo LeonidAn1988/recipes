@@ -102,6 +102,8 @@ function initRecipesUi() {
     removeRecipeFromMenu(selectedId);
     forgetRecipeInFavorites(selectedId);
     selectedId = null;
+    if (history.state && history.state.recipeDetail) history.back();
+    else closeMobileDetail();
     saveRecipes(recipes);
     render();
   });
@@ -316,9 +318,18 @@ function renderRecipeList() {
     }
 
     li.append(title, meta);
-    li.addEventListener("click", () => {
+    // Пункт открывается и с клавиатуры (Enter / пробел).
+    li.tabIndex = 0;
+    li.setAttribute("role", "button");
+    li.dataset.recipeId = recipe.id;
+    const open = () => {
       selectedId = recipe.id;
       renderRecipesView();
+      openMobileDetail();
+    };
+    li.addEventListener("click", open);
+    li.addEventListener("keydown", e => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); }
     });
     listEl.appendChild(li);
   });
@@ -682,12 +693,15 @@ function renderDetail() {
   el("recipeDetail").classList.remove("hidden");
 
   el("detailTitle").textContent = recipe.title;
+  el("backTitle").textContent = recipe.title;
   const cs = cookState(recipe.id);
   const started = cs.steps.length || cs.ings.length;
   el("cookBtn").textContent = cs.finished ? "🍳 Готовить снова"
     : started && (recipe.steps || []).length ? `🍳 Продолжить (шаг ${Math.min(cs.step + 1, recipe.steps.length)})` : "🍳 Готовить";
   const fav = isFavorite(recipe.id);
-  el("favoriteBtn").textContent = fav ? "★ В избранном" : "☆ В избранное";
+  el("favoriteBtn").innerHTML = fav ? '<span aria-hidden="true">★</span><span class="btn-label"> В избранном</span>' : '<span aria-hidden="true">☆</span><span class="btn-label"> В избранное</span>';
+  el("favoriteBtn").setAttribute("aria-label", "В избранном");
+  el("favoriteBtn").setAttribute("aria-pressed", String(fav));
   el("favoriteBtn").classList.toggle("is-fav", fav);
   el("detailCategory").textContent = recipe.category;
 
@@ -743,9 +757,51 @@ function renderDetailTags(recipe) {
   });
 }
 
+// Сброс всех фильтров списка (кнопка «Сбросить» в листе фильтров).
+function resetRecipeFilters() {
+  activeCategory = "all";
+  activeTags.clear();
+  onlyFavorites = false;
+  onlyMine = false;
+  kcalMin = null;
+  kcalMax = null;
+  el("kcalMin").value = "";
+  el("kcalMax").value = "";
+  renderRecipesView();
+}
+
+// Активные фильтры — строкой чипов над списком (видно на телефоне, где сами
+// фильтры спрятаны в лист) и счётчик на кнопке «Фильтры».
+function renderActiveFilters() {
+  const wrap = el("activeFilters");
+  wrap.innerHTML = "";
+  const items = [];
+  if (onlyFavorites) items.push(["★ Избранное", () => { onlyFavorites = false; }]);
+  if (onlyMine) items.push(["👤 Мои", () => { onlyMine = false; }]);
+  if (activeCategory !== "all") items.push([activeCategory, () => { activeCategory = "all"; }]);
+  activeTags.forEach(t => items.push(["#" + t, () => { activeTags.delete(t); }]));
+  if (kcalMin !== null || kcalMax !== null) {
+    items.push([`${kcalMin ?? 0}–${kcalMax ?? "∞"} ккал`, () => {
+      kcalMin = null; kcalMax = null; el("kcalMin").value = ""; el("kcalMax").value = "";
+    }]);
+  }
+  items.forEach(([label, clear]) => {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "chip active";
+    chip.textContent = label + " ✕";
+    chip.setAttribute("aria-label", `Убрать фильтр: ${label}`);
+    chip.addEventListener("click", () => { clear(); renderRecipesView(); });
+    wrap.appendChild(chip);
+  });
+  wrap.classList.toggle("hidden", items.length === 0);
+  el("filtersBtn").textContent = items.length ? `Фильтры · ${items.length}` : "Фильтры";
+}
+
 function renderRecipesView() {
   try { if (selectedId) sessionStorage.setItem("recipes.selected", selectedId); } catch {}
   renderKcalPresets();
+  renderActiveFilters();
   renderCategoryFilters();
   renderTagFilters();
   renderRecipeList();
@@ -1132,4 +1188,5 @@ function handleRecipeSubmit(e) {
   saveRecipes(recipes);
   closeRecipeModal();
   render();
+  openMobileDetail();
 }
