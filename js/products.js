@@ -70,6 +70,7 @@ const BUILTIN_PRODUCTS = [
   { name: "Курица (бедро)", category: "Мясо, птица, рыба", kcal: 185, protein: 16.8, fat: 12.4, carbs: 0, gi: null, units: {} },
   { name: "Индейка (грудка)", category: "Мясо, птица, рыба", kcal: 84, protein: 19.2, fat: 0.7, carbs: 0, gi: null, units: {} },
   { name: "Фарш говяжий", category: "Мясо, птица, рыба", kcal: 254, protein: 17.2, fat: 20, carbs: 0, gi: null, units: {} },
+  { name: "Фарш куриный", category: "Мясо, птица, рыба", kcal: 143, protein: 17.4, fat: 8.1, carbs: 0, gi: null, units: {} },
   { name: "Лосось", category: "Мясо, птица, рыба", kcal: 142, protein: 19.8, fat: 6.3, carbs: 0, gi: null, units: {} },
   { name: "Тунец", category: "Мясо, птица, рыба", kcal: 96, protein: 22.5, fat: 0.7, carbs: 0, gi: null, units: {} },
   { name: "Тунец консервированный", category: "Мясо, птица, рыба", kcal: 96, protein: 21, fat: 1, carbs: 0, gi: null, units: { "банка": 185 } },
