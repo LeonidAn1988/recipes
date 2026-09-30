@@ -1648,6 +1648,19 @@ body.cook-open { overflow: hidden; }
 .cook-title-wrap { flex: 1; min-width: 0; }
 .cook-title-wrap h2 { margin: 0; font-family: var(--font-display); font-size: 1.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cook-wake { font-size: 0.75rem; color: var(--text-muted); }
+.cook-voice-btn { font-size: 1.3rem; min-width: 2.6rem; min-height: 2.6rem; border-radius: 50%; }
+.cook-voice-btn.active { background: var(--accent); color: #fff; }
+.cook-voice-btn.hidden { display: none; }
+.cook-voice {
+  margin: 0.5rem 1rem 0;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--surface);
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+.cook-voice.hidden { display: none; }
 .cook-tabs { display: flex; gap: 0.3rem; padding: 0.5rem 1rem 0; }
 .cook-tabs button {
   flex: 1;

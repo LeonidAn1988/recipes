@@ -1,6 +1,6 @@
 // Режим готовки: рецепт на весь экран, один шаг за раз, крупный текст.
-// Экран не гаснет (Screen Wake Lock API), шаги листаются свайпом, кнопками
-// и стрелками. Отметки ингредиентов и шагов и текущий шаг запоминаются для
+// Экран не гаснет (Screen Wake Lock API), шаги листаются свайпом, кнопками,
+// стрелками и голосом (js/voice.js). Отметки ингредиентов и шагов и текущий шаг запоминаются для
 // каждого рецепта на этом устройстве — уйти и вернуться можно без потерь.
 
 const COOK_KEY = "recipes.cook";
@@ -51,8 +51,10 @@ function initCookMode() {
       <h2 id="cookTitle"></h2>
       <span class="cook-wake" id="cookWake"></span>
     </div>
+    <button type="button" class="btn-icon cook-voice-btn hidden" id="cookVoiceBtn" data-cook="voice" aria-pressed="false" aria-label="Включить голосовое управление">🎙</button>
     <button type="button" class="btn btn-secondary btn-small" data-cook="reset">Снять отметки</button>
   </header>
+  <div class="cook-voice hidden" id="cookVoice" aria-live="polite"></div>
   <div class="cook-tabs">
     <button type="button" data-cook="tab" data-tab="steps" aria-controls="cookBody">Шаги</button>
     <button type="button" data-cook="tab" data-tab="ings" aria-controls="cookBody">Ингредиенты</button>
@@ -89,8 +91,10 @@ function initCookMode() {
     }
   });
   document.addEventListener("visibilitychange", () => {
-    if (cook && document.visibilityState === "visible") requestWakeLock();
+    if (cook && document.visibilityState === "visible") { requestWakeLock(); resumeVoice(); }
   });
+  // Кнопка микрофона — только там, где браузер умеет распознавать речь.
+  el("cookVoiceBtn").classList.toggle("hidden", !voiceSupported());
 }
 
 function onLastStep() {
@@ -128,6 +132,7 @@ function closeCookMode() {
   document.body.classList.remove("cook-open");
   [...document.body.children].forEach(n => { n.inert = false; });
   releaseWakeLock();
+  stopVoice(true);
   cook = null;
   if (typeof overlayClosed === "function") overlayClosed();
   if (typeof renderRecipesView === "function" && activeView === "recipes") renderRecipesView();
@@ -246,6 +251,7 @@ function onCookClick(e) {
   if (!btn || !cook) return;
   switch (btn.dataset.cook) {
     case "close": return closeCookMode();
+    case "voice": return voice.on ? stopVoice() : startVoice();
     case "prev": return cookGo(-1);
     case "next": return cookGo(1);
     case "tab":

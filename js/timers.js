@@ -1,6 +1,14 @@
 // Кухонные таймеры: запускаются из шага рецепта, идут параллельно, видны
 // плашкой внизу экрана на любой странице и переживают перезагрузку (хранится
 // время окончания). По окончании — звук, вибрация и мигающая плашка.
+//
+// Когда приложение свёрнуто или телефон заблокирован, помогают системные
+// уведомления: при уходе с экрана показываем, во сколько таймер закончится,
+// а по окончании — уведомление со звуком. Свёрнутую страницу браузер
+// притормаживает (Chrome на Android — до проверки раз в минуту, через
+// несколько минут может заморозить; iPhone — уведомления только у приложения,
+// добавленного на экран «Домой»), поэтому время окончания на экране
+// блокировки — главная гарантия, а сигнал может прийти с опозданием.
 
 const TIMERS_KEY = "recipes.timers";
 let timers = [];
@@ -31,8 +39,14 @@ function initTimers() {
   if (timers.length) startTicking();
   // В фоновой вкладке интервалы замедляются — при возврате сразу проверяем.
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible") tickTimers();
+    if (document.visibilityState === "visible") {
+      closeNotifications();
+      tickTimers();
+    } else {
+      notifyRunning();
+    }
   });
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
   // Таймеры, запущенные в другой вкладке, подхватываем.
   window.addEventListener("storage", e => {
     if (e.key === TIMERS_KEY) { loadTimers(); renderTimers(); if (timers.length) startTicking(); }
@@ -49,6 +63,7 @@ function unlockAudio() {
 // label — что готовится («Шаг 2: тушить»), minutes — длительность.
 function startTimer(label, minutes) {
   unlockAudio();
+  askNotifyPermission();
   const ms = Math.round(Number(minutes) * 60000);
   if (!(ms > 0)) return;
   timers.push({ id: newId("tm"), label, total: ms, endsAt: Date.now() + ms, pausedLeft: null, done: false });
@@ -74,6 +89,7 @@ function tickTimers() {
       t.lastRing = 0;
       structural = true;
       announce(`Готово: ${t.label}`);
+      notifyDone(t);
     }
     if (t.done && now - (t.lastRing || 0) >= 8000) {
       t.lastRing = now;
@@ -173,8 +189,66 @@ function onTimerBarClick(e) {
       if (t.pausedLeft !== null) t.pausedLeft += 60000;
       else t.endsAt += 60000;
       break;
-    case "close": timers = timers.filter(x => x.id !== t.id); break;
+    case "close": timers = timers.filter(x => x.id !== t.id); closeNotifications(t.id); break;
   }
   saveTimers();
   renderTimers();
+}
+
+// --- Системные уведомления ---
+
+// Разрешение спрашиваем при первом запуске таймера — в ответ на нажатие,
+// иначе браузер не покажет запрос. Отказ браузер запоминает сам.
+function askNotifyPermission() {
+  if (!("Notification" in window) || Notification.permission !== "default") return;
+  Notification.requestPermission().then(p => {
+    if (p === "granted") announce("Уведомления таймеров включены");
+  }).catch(() => {});
+}
+
+async function showNotice(title, options) {
+  if (!("Notification" in window) || Notification.permission !== "granted") return;
+  try {
+    const reg = "serviceWorker" in navigator && await navigator.serviceWorker.getRegistration();
+    const opts = { lang: "ru", icon: "icons/icon-192.png", badge: "icons/icon-192.png", ...options };
+    if (reg) await reg.showNotification(title, opts);
+    else new Notification(title, opts);
+  } catch {}
+}
+
+// Тихое уведомление при уходе с экрана: что идёт и во сколько закончится.
+function notifyRunning() {
+  const running = timers.filter(t => !t.done && t.pausedLeft === null).sort((a, b) => a.endsAt - b.endsAt);
+  if (!running.length) return;
+  const at = ms => new Date(ms).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" });
+  showNotice(running.length === 1 ? "Идёт таймер" : `Идут таймеры: ${running.length}`, {
+    body: running.map(t => `${t.label} — готово в ${at(t.endsAt)}`).join("\n"),
+    tag: "timers-running",
+    silent: true
+  });
+}
+
+function notifyDone(t) {
+  if (document.visibilityState === "visible") return;
+  showNotice(`Готово: ${t.label}`, {
+    body: `Таймер на ${formatAmount(t.total / 60000)} мин закончился`,
+    tag: "timer-" + t.id,
+    renotify: true,
+    requireInteraction: true,
+    vibrate: [400, 200, 400, 200, 400]
+  });
+  // Сводку «идёт таймер» обновляем: этот уже не идёт.
+  closeNotifications("running").then(notifyRunning);
+}
+
+// Закрывает уведомления таймеров: все, одного таймера или сводку «идёт».
+async function closeNotifications(which) {
+  try {
+    const reg = "serviceWorker" in navigator && await navigator.serviceWorker.getRegistration();
+    if (!reg) return;
+    const list = await reg.getNotifications();
+    list.forEach(n => {
+      if (!which ? /^timer/.test(n.tag) : which === "running" ? n.tag === "timers-running" : n.tag === "timer-" + which) n.close();
+    });
+  } catch {}
 }

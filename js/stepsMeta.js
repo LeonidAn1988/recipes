@@ -230,6 +230,10 @@ function wordStems(name) {
     out.push({ stem: w.slice(0, Math.max(4, w.length - 2)), maxLen: w.length + 3 });
     if (/[ео][бвгджзклмнпрстфхцчшщ]$/.test(w)) out.push({ stem: w.slice(0, -2) + w.slice(-1), maxLen: w.length + 3 });
   });
+  // «й» перед согласной в родительном падеже становится «и»: «яйцо» → «яиц».
+  out.slice().forEach(({ stem, maxLen }) => {
+    if (/й[бвгджзклмнпрстфхцчшщ]/.test(stem)) out.push({ stem: stem.replace(/й(?=[бвгджзклмнпрстфхцчшщ])/g, "и"), maxLen });
+  });
   return out;
 }
 
