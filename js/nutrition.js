@@ -304,6 +304,20 @@ function calcRecipe(recipe) {
 
   total.raw = raw;
   total.method = method;
+  // Неизвестный продукт или неуказанное количество не означают ноль калорий.
+  // Черновики OCR также нельзя выдавать за проверенный полный расчёт.
+  total.complete = rows.every((r, i) => r.known &&
+    (r.grams > 0 || (recipe.ingredients[i].unit === "по вкусу" &&
+      findProduct(recipe.ingredients[i].product)?.kcal === 0 &&
+      findProduct(recipe.ingredients[i].product)?.protein === 0 &&
+      findProduct(recipe.ingredients[i].product)?.fat === 0 &&
+      findProduct(recipe.ingredients[i].product)?.carbs === 0))) &&
+    rows.length > 0 && recipe.nutritionReview?.status !== "needs-review";
+  total.missing = (recipe.ingredients || []).filter((ing, i) =>
+    !rows[i].known || (!(rows[i].grams > 0) &&
+      !(ing.unit === "по вкусу" && findProduct(ing.product)?.kcal === 0 &&
+        findProduct(ing.product)?.protein === 0 && findProduct(ing.product)?.fat === 0 &&
+        findProduct(ing.product)?.carbs === 0)));
 
   // Калорийность по Атуотеру — как перекрёстная проверка табличных значений.
   total.kcalAtwater = total.protein * KCAL_PER_G.protein

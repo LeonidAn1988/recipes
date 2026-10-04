@@ -151,6 +151,7 @@ const BUILTIN_PRODUCTS = [
   { name: "Клубника", category: "Фрукты и ягоды", kcal: 33, protein: 0.8, fat: 0.4, carbs: 7.5, gi: 32, units: {} },
   { name: "Малина", category: "Фрукты и ягоды", kcal: 42, protein: 0.8, fat: 0.5, carbs: 8.3, gi: 30, units: {} },
   { name: "Черника", category: "Фрукты и ягоды", kcal: 44, protein: 1.1, fat: 0.4, carbs: 7.6, gi: 25, units: {} },
+  { name: "Клюква", category: "Фрукты и ягоды", kcal: 46, protein: 0.4, fat: 0.1, carbs: 12.2, gi: null, units: {} },
   { name: "Лимон", category: "Фрукты и ягоды", kcal: 16, protein: 0.9, fat: 0.1, carbs: 3, gi: 20, units: { "шт": 100 } },
   { name: "Изюм", category: "Фрукты и ягоды", kcal: 264, protein: 2.3, fat: 0.5, carbs: 66, gi: 65, units: { "ст.л.": 10 } },
   { name: "Курага", category: "Фрукты и ягоды", kcal: 232, protein: 5.2, fat: 0.3, carbs: 51, gi: 35, units: { "шт": 8 } },

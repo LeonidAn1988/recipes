@@ -16,7 +16,7 @@ const DEFAULT_RECIPES = [
     category: "Завтраки",
     time: "25 мин",
     servings: "4 порции",
-    image: "",
+    image: "img/seed-1-oladyi.jpg",
     video: "",
     ingredients: [
       { product: "Кефир 1%", amount: 500, unit: "мл" },
@@ -40,7 +40,7 @@ const DEFAULT_RECIPES = [
     category: "Завтраки",
     time: "15 мин",
     servings: "2 порции",
-    image: "",
+    image: "img/seed-2-oatmeal.jpg",
     video: "",
     ingredients: [
       { product: "Овсяные хлопья", amount: 90, unit: "г" },
@@ -63,7 +63,7 @@ const DEFAULT_RECIPES = [
     category: "Завтраки",
     time: "15 мин",
     servings: "2 порции",
-    image: "",
+    image: "img/seed-3-omelet.jpg",
     video: "",
     ingredients: [
       { product: "Яйцо куриное", amount: 4, unit: "шт" },
@@ -89,7 +89,7 @@ const DEFAULT_RECIPES = [
     category: "Завтраки",
     time: "25 мин",
     servings: "3 порции",
-    image: "",
+    image: "img/seed-4-syrniki.jpg",
     video: "",
     ingredients: [
       { product: "Творог 5%", amount: 400, unit: "г" },
@@ -115,7 +115,7 @@ const DEFAULT_RECIPES = [
     category: "Супы",
     time: "1 ч 30 мин",
     servings: "6 порций",
-    image: "",
+    image: "img/seed-5-borscht.jpg",
     video: "",
     ingredients: [
       { product: "Говядина", amount: 500, unit: "г" },
@@ -152,7 +152,7 @@ const DEFAULT_RECIPES = [
     category: "Супы",
     time: "50 мин",
     servings: "4 порции",
-    image: "",
+    image: "img/seed-6-chicken-soup.jpg",
     video: "",
     ingredients: [
       { product: "Курица (бедро)", amount: 400, unit: "г" },
@@ -180,7 +180,7 @@ const DEFAULT_RECIPES = [
     category: "Супы",
     time: "45 мин",
     servings: "4 порции",
-    image: "",
+    image: "img/seed-7-lentil-soup.jpg",
     video: "",
     ingredients: [
       { product: "Чечевица (сухая)", amount: 250, unit: "г" },
@@ -209,7 +209,7 @@ const DEFAULT_RECIPES = [
     category: "Салаты",
     time: "15 мин",
     servings: "4 порции",
-    image: "",
+    image: "img/seed-8-vegetable-salad.jpg",
     video: "",
     ingredients: [
       { product: "Помидор", amount: 3, unit: "шт" },
@@ -234,7 +234,7 @@ const DEFAULT_RECIPES = [
     category: "Салаты",
     time: "20 мин",
     servings: "2 порции",
-    image: "",
+    image: "img/seed-9-tuna-salad.jpg",
     video: "",
     ingredients: [
       { product: "Тунец консервированный", amount: 1, unit: "банка" },
@@ -261,7 +261,7 @@ const DEFAULT_RECIPES = [
     category: "Салаты",
     time: "1 ч",
     servings: "6 порций",
-    image: "",
+    image: "img/seed-10-vinaigrette.jpg",
     video: "",
     ingredients: [
       { product: "Свёкла", amount: 2, unit: "шт" },
@@ -287,7 +287,7 @@ const DEFAULT_RECIPES = [
     category: "Основные блюда",
     time: "40 мин",
     servings: "4 порции",
-    image: "",
+    image: "img/seed-11-buckwheat-chicken.jpg",
     video: "",
     ingredients: [
       { product: "Гречка (сырая)", amount: 300, unit: "г" },
@@ -315,7 +315,7 @@ const DEFAULT_RECIPES = [
     category: "Основные блюда",
     time: "1 ч 40 мин",
     servings: "4 порции",
-    image: "",
+    image: "img/seed-12-beef-stew.jpg",
     video: "",
     ingredients: [
       { product: "Говядина", amount: 600, unit: "г" },
@@ -344,7 +344,7 @@ const DEFAULT_RECIPES = [
     category: "Основные блюда",
     time: "30 мин",
     servings: "2 порции",
-    image: "",
+    image: "img/seed-13-salmon-broccoli.jpg",
     video: "",
     ingredients: [
       { product: "Лосось", amount: 400, unit: "г" },
@@ -369,7 +369,7 @@ const DEFAULT_RECIPES = [
     category: "Основные блюда",
     time: "1 ч",
     servings: "5 порций",
-    image: "",
+    image: "img/seed-14-pilaf.jpg",
     video: "",
     ingredients: [
       { product: "Рис белый (сырой)", amount: 500, unit: "г" },
@@ -398,7 +398,7 @@ const DEFAULT_RECIPES = [
     category: "Основные блюда",
     time: "25 мин",
     servings: "2 порции",
-    image: "",
+    image: "img/seed-15-shrimp-pasta.jpg",
     video: "",
     ingredients: [
       { product: "Макароны (сухие)", amount: 200, unit: "г" },
@@ -426,7 +426,7 @@ const DEFAULT_RECIPES = [
     category: "Выпечка",
     time: "1 ч",
     servings: "8 порций",
-    image: "",
+    image: "img/seed-16-charlotte.jpg",
     video: "",
     ingredients: [
       { product: "Яблоко", amount: 4, unit: "шт" },
@@ -453,7 +453,7 @@ const DEFAULT_RECIPES = [
     category: "Выпечка",
     time: "1 ч",
     servings: "6 порций",
-    image: "",
+    image: "img/seed-17-cottage-casserole.jpg",
     video: "",
     ingredients: [
       { product: "Творог 5%", amount: 600, unit: "г" },
@@ -481,7 +481,7 @@ const DEFAULT_RECIPES = [
     category: "Основные блюда",
     time: "20 мин",
     servings: "2 порции",
-    image: "",
+    image: "img/seed-18-steamed-fish.jpg",
     video: "",
     ingredients: [
       { product: "Снежная рыба", amount: 350, unit: "г" },
@@ -1105,7 +1105,7 @@ const DEFAULT_RECIPES = [
     category: "Основные блюда",
     time: "1 ч 10 мин",
     servings: "5 порций",
-    image: "",
+    image: "img/seed-38-casserole.jpg",
     video: "",
     ingredients: [
       { product: "Картофель", amount: 800, unit: "г" },
@@ -1118,7 +1118,7 @@ const DEFAULT_RECIPES = [
       { product: "Яйцо куриное", amount: 1, unit: "шт" },
       { product: "Растительное масло", amount: 2, unit: "ст.л." },
       { product: "Соль", amount: 1, unit: "по вкусу" },
-      { product: "Перец чёрный молотый", amount: 1, unit: "по вкусу" }
+      { product: "Перец чёрный молотый", amount: 0.5, unit: "г" }
     ],
     steps: [
       { text: "Картофель очистить, нарезать кубиками и отварить в подсоленной воде до готовности, 15–20 минут. Воду слить.", image: "" },
@@ -1133,6 +1133,171 @@ const DEFAULT_RECIPES = [
     ]
   }
 ];
+
+// Напитки без медицинских обещаний. Для младенцев до 12 месяцев рецепты
+// морсов/соков не предназначены; сладкие напитки детям до 2 лет не предлагаем.
+// Возрастные оговорки и сахар сверены с WHO и NHS (ссылки в recipe.source).
+const BEVERAGE_RECIPES = [
+  {
+    id: "drink-water-citrus-family-v1",
+    title: "Вода с лимоном без сахара",
+    category: "Напитки",
+    tags: ["напитки", "без сахара", "взрослым"],
+    time: "5 мин",
+    servings: "4 порции",
+    method: "raw",
+    image: "img/drink-lemon-water.jpg",
+    video: "",
+    ingredients: [
+      { product: "Вода", amount: 1000, unit: "мл" },
+      { product: "Лимон", amount: 50, unit: "г" }
+    ],
+    steps: [
+      { text: "Лимон тщательно вымыть и нарезать тонкими кружками.", image: "" },
+      { text: "Добавить лимон в питьевую воду. Дать настояться в холодильнике 15–30 минут.", image: "" },
+      { text: "Подавать охлаждённой. Для маленьких детей убрать кусочки, чтобы избежать риска подавиться.", image: "" }
+    ],
+    notes: "Вода — основной напиток для утоления жажды. Кислые напитки не предлагать часто и не держать во рту; детям младше 2 лет не добавлять сахар и сироп.",
+    nutritionReview: { status: "needs-review", notes: ["КБЖУ стакана не рассчитаны: количество лимона, которое переходит в воду, неизвестно."] },
+    source: [
+      { title: "WHO — sugars and dental caries", url: "https://www.who.int/news-room/fact-sheets/detail/sugars-and-dental-caries" },
+      { title: "WHO — water for children", url: "https://www.who.int/publications/i/item/WPR-2016-DNH-008" }
+    ]
+  },
+  {
+    id: "drink-berry-infusion-v1",
+    title: "Несладкий ягодный настой",
+    category: "Напитки",
+    tags: ["напитки", "без сахара", "ягоды", "взрослым"],
+    time: "10 мин + охлаждение",
+    servings: "4 порции",
+    method: "boil",
+    image: "img/drink-berry-infusion.jpg",
+    video: "",
+    ingredients: [
+      { product: "Вода", amount: 1000, unit: "мл" },
+      { product: "Малина", amount: 100, unit: "г" },
+      { product: "Черника", amount: 100, unit: "г" }
+    ],
+    steps: [
+      { text: "Ягоды перебрать и промыть питьевой водой.", image: "" },
+      { text: "Воду довести до кипения, выключить нагрев, добавить ягоды и настоять под крышкой 10 минут.", image: "" },
+      { text: "Остудить, при желании процедить. Не добавлять сахар; детям дать напиток без ягодных кусочков.", image: "" }
+    ],
+    notes: "Это несладкий напиток, не лечебное средство. Расчёт относится ко всем ингредиентам; если ягоды процедить и не съесть, фактические КБЖУ жидкости будут другими. Ягоды — возможный аллерген; вводить по одному продукту с учётом переносимости. Не использовать для детей до 12 месяцев как замену грудному молоку или смеси.",
+    nutritionReview: { status: "needs-review", notes: ["КБЖУ настоя не рассчитаны: степень перехода сахаров из ягод в жидкость зависит от приготовления и процеживания."] },
+    source: [
+      { title: "WHO — sugars and dental caries", url: "https://www.who.int/news-room/fact-sheets/detail/sugars-and-dental-caries" },
+      { title: "NHS — drinks for babies and young children", url: "https://www.nhs.uk/baby/weaning-and-feeding/what-to-feed-young-children/" }
+    ]
+  },
+  {
+    id: "drink-light-compote-v1",
+    title: "Компот из яблок без добавленного сахара",
+    category: "Напитки",
+    tags: ["напитки", "компот", "без добавленного сахара"],
+    time: "20 мин",
+    servings: "5 порций",
+    method: "boil",
+    image: "img/drink-apple-compote.jpg",
+    video: "",
+    ingredients: [
+      { product: "Вода", amount: 1200, unit: "мл" },
+      { product: "Яблоко", amount: 300, unit: "г" }
+    ],
+    steps: [
+      { text: "Яблоки вымыть, удалить сердцевину и нарезать. Для маленьких детей кожуру можно снять.", image: "" },
+      { text: "Залить яблоки питьевой водой, довести до кипения и варить на слабом огне 8–10 минут.", image: "" },
+      { text: "Остудить под крышкой. Подавать без сахара; детям не давать кусочки, если они ещё не умеют безопасно жевать.", image: "" }
+    ],
+    notes: "Фрукты содержат природные сахара; отсутствие добавленного сахара не означает, что напиток не содержит сахаров. Расчёт относится к воде и всем яблокам; если яблоки не съесть, фактические КБЖУ жидкости будут другими. Напиток не заменяет воду или основное молочное питание младенца; рекомендации по прикорму уточняйте у педиатра.",
+    nutritionReview: { status: "needs-review", notes: ["КБЖУ компота не рассчитаны: часть сахаров остаётся во фруктах или переходит в отвар."] },
+    source: [
+      { title: "WHO — sugars and dental caries", url: "https://www.who.int/news-room/fact-sheets/detail/sugars-and-dental-caries" },
+      { title: "NHS — what to feed young children", url: "https://www.nhs.uk/baby/weaning-and-feeding/what-to-feed-young-children/" }
+    ]
+  },
+  {
+    id: "drink-diluted-juice-v1",
+    title: "Разбавленный 100% сок — порционный вариант",
+    category: "Напитки",
+    tags: ["напитки", "сок", "для взрослых"],
+    time: "2 мин",
+    servings: "1 порция",
+    method: "raw",
+    image: "img/drink-diluted-juice.jpg",
+    video: "",
+    ingredients: [
+      { product: "Сок апельсиновый", amount: 15, unit: "мл" },
+      { product: "Вода", amount: 150, unit: "мл" }
+    ],
+    steps: [
+      { text: "Смешать одну часть 100% сока с десятью частями воды. Подавать во время еды, не растягивая питьё на весь день.", image: "" }
+    ],
+    notes: "Сок содержит свободные сахара. NHS указывает, что до 12 месяцев сок не нужен; если взрослый всё же решит его предложить, разбавлять 1:10 и давать во время еды. С пяти лет NHS рекомендует не более 150 мл сока в день во время еды. Это не рекомендация пить сок ежедневно. КБЖУ рассчитаны по усреднённому справочному апельсиновому соку; конкретная марка может отличаться.",
+    source: [
+      { title: "NHS — drinks and cups for babies and young children", url: "https://www.nhs.uk/baby/weaning-and-feeding/drinks-and-cups-for-babies-and-young-children/" },
+      { title: "WHO — sugars and dental caries", url: "https://www.who.int/news-room/fact-sheets/detail/sugars-and-dental-caries" }
+    ]
+  },
+  {
+    id: "drink-cranberry-mors-v1",
+    title: "Клюквенный морс с мёдом",
+    category: "Напитки",
+    tags: ["напитки", "морс", "клюква", "взрослым"],
+    time: "30 мин + охлаждение",
+    servings: "8 порций",
+    method: "boil",
+    image: "img/drink-cranberry-mors.jpg",
+    video: "",
+    ingredients: [
+      { product: "Клюква", amount: 500, unit: "г" },
+      { product: "Вода", amount: 2000, unit: "мл" },
+      { product: "Мёд", amount: 2, unit: "ст.л." }
+    ],
+    steps: [
+      { text: "Перебрать и промыть клюкву, размять и отжать сок в чистую ёмкость. Сок убрать в холодильник.", image: "" },
+      { text: "Залить отжатую мякоть водой, довести до кипения и варить на слабом огне 3–4 минуты. Процедить.", image: "" },
+      { text: "Остудить отвар примерно до 50 °C, размешать в нём мёд и добавить охлаждённый сок.", image: "" },
+      { text: "Остудить и хранить в холодильнике. Не использовать мёд в напитках для детей младше 2 лет.", image: "" }
+    ],
+    notes: "Рецепт адаптирован по пропорциям проекта Роспотребнадзора «Здоровое питание». Это напиток, а не лечебное средство. Часть мякоти удаляется при процеживании, поэтому расчёт КБЖУ по исходным ингредиентам не отражает состав готовой жидкости. Мёд относится к свободным сахарам.",
+    nutritionReview: { status: "needs-review", notes: ["КБЖУ и ГИ готового морса не выводятся: неизвестно, сколько сахаров и других веществ остаётся в процеженной мякоти."] },
+    source: [
+      { title: "Роспотребнадзор — Домашний клюквенный морс", url: "https://xn----8sbehgcimb3cfabqj3b.xn--p1ai/recipes/selection/domashniy_klyukvennyy_mors/" },
+      { title: "WHO — sugars and dental caries", url: "https://www.who.int/news-room/fact-sheets/detail/sugars-and-dental-caries" }
+    ]
+  },
+  {
+    id: "drink-lemonade-v1",
+    title: "Домашний лимонад",
+    category: "Напитки",
+    tags: ["напитки", "лимонад", "для взрослых"],
+    time: "10 мин + охлаждение",
+    servings: "6 порций",
+    method: "raw",
+    image: "img/drink-lemonade.jpg",
+    video: "",
+    ingredients: [
+      { product: "Лимон", amount: 3, unit: "шт" },
+      { product: "Сахар", amount: 50, unit: "г" },
+      { product: "Вода", amount: 1000, unit: "мл" }
+    ],
+    steps: [
+      { text: "Растворить сахар в небольшом количестве тёплой воды и остудить.", image: "" },
+      { text: "Выжать сок из лимонов, смешать с сиропом и оставшейся холодной питьевой водой.", image: "" },
+      { text: "Охладить. При желании подать со льдом; газированную воду добавлять непосредственно перед подачей.", image: "" }
+    ],
+    notes: "Количество сахара уменьшено относительно источника и можно корректировать по вкусу. Сахар — свободный сахар; это не напиток на каждый день для маленьких детей. Для детей до 2 лет не предлагать сахаросодержащие напитки.",
+    nutritionReview: { status: "needs-review", notes: ["КБЖУ ориентировочно не выводятся: часть лимонного сока остаётся в выжатых плодах, фактический выход зависит от размера и сочности лимонов."] },
+    source: [
+      { title: "BBC Good Food — Easy lemonade", url: "https://www.bbcgoodfood.com/recipes/4620/really-easy-lemonade-" },
+      { title: "WHO — sugars and dental caries", url: "https://www.who.int/news-room/fact-sheets/detail/sugars-and-dental-caries" }
+    ]
+  }
+];
+
+DEFAULT_RECIPES.push(...BEVERAGE_RECIPES);
 
 // Стартовые теги. Хранятся отдельно, чтобы не раздувать описания рецептов;
 // в уже сохранённую книгу доливаются тем рецептам, у которых тегов ещё нет

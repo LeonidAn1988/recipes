@@ -122,17 +122,28 @@ function loadRecipes() {
   // осознанно снятые теги, не трогаем.
   let tagsAdded = false;
   stored.forEach(r => {
+    const seed = DEFAULT_RECIPES.find(d => d.id === r.id);
+    if (Object.hasOwn(r, "sourceText")) {
+      delete r.sourceText;
+      tagsAdded = true;
+    }
     if (r.tags === undefined && STARTER_TAGS[r.id]) {
       r.tags = [...STARTER_TAGS[r.id]];
       tagsAdded = true;
     }
     // Способ приготовления появился ещё позже — та же логика.
     if (r.method === undefined) {
-      const seed = DEFAULT_RECIPES.find(d => d.id === r.id);
       if (seed) {
         r.method = seed.method;
         tagsAdded = true;
       }
+    }
+    // Новые изображения стартовых рецептов также должны появиться у семьи,
+    // даже если эта запись уже сохранена на устройстве. Не заменяем фото,
+    // которое пользователь сам добавил или выбрал.
+    if (seed?.image && !r.image) {
+      r.image = seed.image;
+      tagsAdded = true;
     }
   });
 
@@ -192,11 +203,15 @@ function saveMenu(items) {
 // --- Экспорт / импорт ---
 
 function buildExport(recipesList) {
+  const safeRecipes = recipesList.map(r => {
+    const { sourceText, ...recipe } = r;
+    return recipe;
+  });
   return {
     format: EXPORT_FORMAT,
     version: EXPORT_VERSION,
     exportedAt: new Date().toISOString(),
-    recipes: recipesList,
+    recipes: safeRecipes,
     customProducts,
     tinctures: loadSection("tinctures"),
     canning: loadSection("canning"),
@@ -231,9 +246,16 @@ function parseImport(text) {
     throw new Error("Файл не является корректным JSON.");
   }
 
+  // Полный распознанный текст страницы — только локальная сверка, не поле
+  // семейной книги. Убираем его при импорте и не отправляем в облако.
+  const safeRecipes = list => list.filter(isValidRecipe).map(r => {
+    const { sourceText, ...recipe } = r;
+    return recipe;
+  });
+
   // Старый формат — просто массив рецептов.
   if (Array.isArray(data)) {
-    return { recipes: data.filter(isValidRecipe), customProducts: [] };
+    return { recipes: safeRecipes(data), customProducts: [] };
   }
 
   if (!data || data.format !== EXPORT_FORMAT) {
@@ -243,7 +265,7 @@ function parseImport(text) {
     throw new Error("В файле нет списка рецептов.");
   }
 
-  const recipes = data.recipes.filter(isValidRecipe);
+  const recipes = safeRecipes(data.recipes);
   if (recipes.length === 0) {
     throw new Error("В файле не нашлось ни одного рецепта с названием и ингредиентами.");
   }
@@ -315,18 +337,33 @@ function applyImport(current, imported, mode) {
   importSections(imported, mode);
   if (mode === "replace") {
     saveCustomProducts(imported.customProducts);
-    return imported.recipes;
+    return imported.recipes.map(r => {
+      const { sourceText, ...recipe } = r;
+      return recipe;
+    });
   }
 
   const usedIds = new Set(current.map(r => r.id));
-  const added = imported.recipes.map(r => {
+  const added = imported.recipes.filter(r => {
+    const key = value => String(value || "").normalize("NFKC").trim().toLocaleLowerCase("ru").replace(/\s+/g, " ");
+    const duplicateChild = r.source && r.id.startsWith("children-") && current.some(x =>
+      x.source && x.id.startsWith("children-") &&
+      key(x.source.book) === key(r.source.book) &&
+      String(x.source.page) === String(r.source.page) &&
+      key(x.title) === key(r.title));
+    // Сверяем название и страницу источника, а не только номер записи:
+    // OCR-переразметка того же листа не создаёт копию рецепта.
+    return !duplicateChild;
+  }).map(r => {
     if (!r.id || usedIds.has(r.id)) {
       const id = "r-" + Date.now() + "-" + Math.random().toString(36).slice(2, 7);
       usedIds.add(id);
-      return { ...r, id };
+      const { sourceText, ...recipe } = r;
+      return { ...recipe, id };
     }
     usedIds.add(r.id);
-    return r;
+    const { sourceText, ...recipe } = r;
+    return recipe;
   });
 
   const productNames = new Set(customProducts.map(p => p.name));

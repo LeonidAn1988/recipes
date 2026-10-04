@@ -251,6 +251,15 @@ body {
 }
 
 .recipe-item:hover { background: var(--surface); }
+.recipe-notice {
+  margin: 0.75rem 0;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-alt);
+  color: var(--text);
+  line-height: 1.5;
+}
 
 .recipe-item.selected {
   background: var(--accent);
@@ -1836,6 +1845,12 @@ button.step-time { min-height: 24px; }
 .collapsible > summary::after { content: "›"; font-size: 1.4rem; line-height: 1; color: var(--text-muted); transform: rotate(90deg); transition: transform 150ms ease-out; }
 .collapsible[open] > summary::after { transform: rotate(-90deg); }
 .collapsible[open] > summary { margin-bottom: 0.7rem; }
+.nutrition-section > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; }
+.nutrition-section > summary::-webkit-details-marker { display: none; }
+.nutrition-section > summary h3 { margin: 0; }
+.nutrition-section > summary::after { content: "›"; font-size: 1.4rem; line-height: 1; color: var(--text-muted); transform: rotate(90deg); transition: transform 150ms ease-out; }
+.nutrition-section[open] > summary::after { transform: rotate(-90deg); }
+.nutrition-section[open] > summary { margin-bottom: 0.7rem; }
 
 @media screen and (max-width: 760px) {
   /* Поля ввода 16 px: иначе iPhone приближает страницу при каждом касании. */
@@ -2143,7 +2158,7 @@ button.step-time { min-height: 24px; }
   .mobile-back .back-title { flex: 1; min-width: 0; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--header-text); }
 
   /* Нижние отступы: последний рецепт и низ страницы не уходят под «+» и панели. */
-  .recipe-list { padding-bottom: 88px; }
+  .recipe-list { padding-bottom: calc(136px + env(safe-area-inset-bottom)); }
   body { padding-bottom: calc(68px + env(safe-area-inset-bottom) + var(--timers-h, 0px)); }
   .tab-bar button { font-size: 0.75rem; }
 

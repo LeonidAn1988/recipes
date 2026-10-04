@@ -17,6 +17,8 @@ const KCAL_PRESETS = [
 ];
 
 function initRecipesUi() {
+  const nutritionDetails = el("nutritionDetails");
+  if (nutritionDetails) nutritionDetails.open = !window.matchMedia("(max-width: 760px)").matches;
   el("searchInput").addEventListener("input", e => {
     searchQuery = e.target.value;
     renderRecipesView();
@@ -168,7 +170,9 @@ function readKcal(id) {
 // Рецепт без числа порций калорийности на порцию не имеет — при включённом
 // фильтре он не показывается.
 function kcalInRange(recipe) {
-  const perServing = calcRecipe(recipe).total.perServing;
+  const total = calcRecipe(recipe).total;
+  if (!total.complete) return false;
+  const perServing = total.perServing;
   if (!perServing) return false;
   const kcal = Math.round(perServing.kcal);
   if (kcalMin !== null && kcal < kcalMin) return false;
@@ -294,7 +298,7 @@ function renderRecipeList() {
 
   filtered.forEach(recipe => {
     const { total } = calcRecipe(recipe);
-    const perServing = total.perServing;
+    const perServing = total.complete ? total.perServing : null;
 
     const li = document.createElement("li");
     li.className = "recipe-item" + (recipe.id === selectedId ? " selected" : "");
@@ -307,7 +311,7 @@ function renderRecipeList() {
     meta.className = "recipe-item-category";
     meta.textContent = perServing
       ? `${recipe.category} · ${Math.round(perServing.kcal)} ккал/порция`
-      : recipe.category;
+      : recipe.category + (total.complete ? "" : " · расчёт неполный");
 
     if (favorites.has(recipe.id)) {
       const star = document.createElement("span");
@@ -337,9 +341,24 @@ function renderRecipeList() {
 
 // --- Детальный просмотр ---
 
-function renderNutrition(total) {
+function renderNutrition(total, recipe = null) {
   const summaryEl = el("nutritionSummary");
   summaryEl.innerHTML = "";
+  if (!total.complete) {
+    const note = document.createElement("p");
+    note.className = "hint nutrition-note";
+    note.setAttribute("role", "status");
+    note.textContent = recipe?.nutritionReview?.status === "needs-review"
+      ? "Расчёт не показан: " + (recipe.nutritionReview.notes || []).join(" ")
+      : "Полный расчёт недоступен: проверьте продукты и количества ингредиентов. " +
+        "Неизвестные значения не равны нулю. Для импортированного черновика также нужна сверка с оригиналом.";
+    summaryEl.appendChild(note);
+    el("giValue").textContent = "—";
+    el("glValue").textContent = "—";
+    el("giNote").textContent = "недостаточно данных";
+    el("glNote").textContent = "недостаточно данных";
+    return;
+  }
 
   const columns = [
     { key: "perServing", label: total.servings > 0 ? `На порцию (${total.servings} шт.)` : "На порцию" },
@@ -424,7 +443,7 @@ function renderIngredientsTable(recipe, rows, total) {
     const r = rows[i];
     const tr = buildRow([
       { text: ing.product },
-      { text: ing.unit === "по вкусу" ? "" : formatAmount(Number(ing.amount) || 0), cls: "num" },
+      { text: ing.sourceAmount || (ing.unit === "по вкусу" ? "" : ing.amount == null ? "не указано" : formatAmount(Number(ing.amount) || 0)), cls: "num" },
       { text: ing.unit },
       { text: r.grams ? Math.round(r.grams) : "—", cls: "num" },
       { text: r.known ? Math.round(r.kcal) : "—", cls: "num" },
@@ -439,6 +458,16 @@ function renderIngredientsTable(recipe, rows, total) {
     }
     tbody.appendChild(tr);
   });
+
+  if (!total.complete) {
+    const tr = document.createElement("tr");
+    const td = document.createElement("td");
+    td.colSpan = 9;
+    td.textContent = "Неполный состав: значения в строках относятся только к известным ингредиентам. Итог блюда не рассчитан.";
+    tr.appendChild(td);
+    tfoot.appendChild(tr);
+    return;
+  }
 
   const raw = total.raw;
   const cooked = total.method !== "raw";
@@ -700,7 +729,7 @@ function renderDetail() {
     : started && (recipe.steps || []).length ? `🍳 Продолжить (шаг ${Math.min(cs.step + 1, recipe.steps.length)})` : "🍳 Готовить";
   const fav = isFavorite(recipe.id);
   el("favoriteBtn").innerHTML = fav ? '<span aria-hidden="true">★</span><span class="btn-label"> В избранном</span>' : '<span aria-hidden="true">☆</span><span class="btn-label"> В избранное</span>';
-  el("favoriteBtn").setAttribute("aria-label", "В избранном");
+  el("favoriteBtn").setAttribute("aria-label", fav ? "Убрать из избранного" : "Добавить в избранное");
   el("favoriteBtn").setAttribute("aria-pressed", String(fav));
   el("favoriteBtn").classList.toggle("is-fav", fav);
   el("detailCategory").textContent = recipe.category;
@@ -710,6 +739,9 @@ function renderDetail() {
   timeEl.classList.toggle("hidden", !recipe.time);
 
   renderDetailTags(recipe);
+  const notice = el("recipeNotice");
+  notice.textContent = recipe.notes || "";
+  notice.classList.toggle("hidden", !recipe.notes);
   el("detailMethod").textContent = methodLabel(recipe.method || "raw");
   const author = authorName(recipe.createdBy);
   el("detailAuthor").textContent = author ? "добавил(а): " + author : "";
@@ -722,13 +754,45 @@ function renderDetail() {
   const imgEl = el("detailImage");
   if (recipe.image) {
     imgEl.src = recipe.image;
+    imgEl.alt = `Фото: ${recipe.title}`;
     imgEl.classList.remove("hidden");
   } else {
     imgEl.classList.add("hidden");
   }
 
   const { rows, total } = calcRecipe(recipe);
-  renderNutrition(total);
+  renderNutrition(total, recipe);
+  if (recipe.source) {
+    const source = document.createElement("p");
+    source.className = "hint nutrition-note";
+    if (Array.isArray(recipe.source)) {
+      source.textContent = "Источники рекомендаций: ";
+      recipe.source.forEach((item, i) => {
+        if (i) source.append(" · ");
+        let href;
+        try {
+          href = new URL(item.url, location.href);
+        } catch {
+          source.append(document.createTextNode(item.title || "Источник"));
+          return;
+        }
+        if (href.protocol !== "https:" && href.protocol !== "http:") {
+          source.append(document.createTextNode(item.title || "Источник"));
+          return;
+        }
+        const link = document.createElement("a");
+        link.href = href.href;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.textContent = item.title || "Источник";
+        source.appendChild(link);
+      });
+    } else {
+      source.textContent = `Источник: ${recipe.source.book}, PDF-страница ${recipe.source.page}. ` +
+        (recipe.nutritionReview?.notes || []).join(" ");
+    }
+    el("nutritionSummary").appendChild(source);
+  }
   renderIngredientsTable(recipe, rows, total);
   renderSteps(recipe);
   renderVideo(recipe);
@@ -1088,6 +1152,17 @@ function collectSteps() {
 function openRecipeModal(recipe) {
   const form = el("recipeForm");
   form.reset();
+  el("importReviewField")?.remove();
+  if (recipe?.nutritionReview?.status === "needs-review") {
+    const label = document.createElement("label");
+    label.id = "importReviewField";
+    label.className = "hint";
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.id = "importReviewConfirmed";
+    label.append(checkbox, " Я сверил(а) рецепт с PDF и уточнил(а) все продукты и количества. Разрешить расчёт после сохранения.");
+    form.insertBefore(label, form.firstChild);
+  }
   el("formIngredients").innerHTML = "";
   el("formSteps").innerHTML = "";
 
@@ -1178,6 +1253,9 @@ function handleRecipeSubmit(e) {
   data.updatedAt = new Date().toISOString();
   if (idx !== -1) {
     recipes[idx] = { ...recipes[idx], ...data };
+    if (el("importReviewConfirmed")?.checked) {
+      recipes[idx].nutritionReview = { ...recipes[idx].nutritionReview, status: "reviewed" };
+    }
     selectedId = id;
   } else {
     const newRecipe = { id: "r-" + Date.now(), createdBy: currentMemberId(), ...data };

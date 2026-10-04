@@ -91,7 +91,7 @@ function updateMenuBadge() {
 // Собирает расчёт по всему меню: строки блюд, итоги дня и список покупок.
 function calcMenu() {
   const items = [];
-  const day = { kcal: 0, protein: 0, fat: 0, carbs: 0, gl: 0 };
+  const day = { kcal: 0, protein: 0, fat: 0, carbs: 0, gl: 0, complete: true };
   let carbsWithGi = 0;
   let giWeightedSum = 0;
   const shopping = new Map();
@@ -105,6 +105,7 @@ function calcMenu() {
     const factor = item.servings / base;
 
     const scaled = {
+      complete: total.complete,
       kcal: total.kcal * factor,
       protein: total.protein * factor,
       fat: total.fat * factor,
@@ -112,6 +113,7 @@ function calcMenu() {
       gl: total.gl === null ? null : total.gl * factor,
       gi: total.gi
     };
+    if (!total.complete) day.complete = false;
 
     day.kcal += scaled.kcal;
     day.protein += scaled.protein;
@@ -234,23 +236,23 @@ function renderMenuItems(items, day) {
     tbody.appendChild(buildRow([
       { node: titleBtn },
       { node: servingsInput, cls: "num" },
-      { text: Math.round(scaled.kcal), cls: "num" },
-      { text: fmt(scaled.protein), cls: "num" },
-      { text: fmt(scaled.fat), cls: "num" },
-      { text: fmt(scaled.carbs), cls: "num" },
-      { text: scaled.gl === null ? "—" : fmt(scaled.gl), cls: "num" },
+      { text: scaled.complete ? Math.round(scaled.kcal) : "—", cls: "num" },
+      { text: scaled.complete ? fmt(scaled.protein) : "—", cls: "num" },
+      { text: scaled.complete ? fmt(scaled.fat) : "—", cls: "num" },
+      { text: scaled.complete ? fmt(scaled.carbs) : "—", cls: "num" },
+      { text: !scaled.complete || scaled.gl === null ? "—" : fmt(scaled.gl), cls: "num" },
       { node: removeBtn, cls: "actions" }
     ]));
   });
 
   tfoot.appendChild(buildRow([
-    { text: "Итого" },
+    { text: day.complete ? "Итого" : "Итог недоступен: неполный состав" },
     { text: "" },
-    { text: Math.round(day.kcal), cls: "num" },
-    { text: fmt(day.protein), cls: "num" },
-    { text: fmt(day.fat), cls: "num" },
-    { text: fmt(day.carbs), cls: "num" },
-    { text: fmt(day.gl), cls: "num" },
+    { text: day.complete ? Math.round(day.kcal) : "—", cls: "num" },
+    { text: day.complete ? fmt(day.protein) : "—", cls: "num" },
+    { text: day.complete ? fmt(day.fat) : "—", cls: "num" },
+    { text: day.complete ? fmt(day.carbs) : "—", cls: "num" },
+    { text: day.complete ? fmt(day.gl) : "—", cls: "num" },
     { text: "" }
   ]));
 }
@@ -258,6 +260,13 @@ function renderMenuItems(items, day) {
 function renderMenuSummary(day) {
   const wrap = el("menuSummary");
   wrap.innerHTML = "";
+  if (!day.complete) {
+    const note = document.createElement("p");
+    note.className = "hint";
+    note.textContent = "Итог меню не рассчитан: у одного или нескольких рецептов неполный состав или непроверенный импорт.";
+    wrap.appendChild(note);
+    return;
+  }
   wrap.appendChild(nutritionCard("Всего за день", day));
 
   const dayGi = day.gi === null ? null : Math.round(day.gi);

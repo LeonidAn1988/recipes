@@ -154,6 +154,21 @@ function initMobile() {
     setFiltersOpen(false);
   });
   document.addEventListener("keydown", e => {
+    if (e.key === "Tab" && document.body.classList.contains("filters-open")) {
+      const panel = el("filtersPanel");
+      const focusable = [...panel.querySelectorAll('button:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])')]
+        .filter(node => node.getClientRects().length && !node.inert);
+      if (focusable.length) {
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey && (document.activeElement === first || !panel.contains(document.activeElement))) {
+          e.preventDefault(); last.focus();
+        } else if (!e.shiftKey && (document.activeElement === last || !panel.contains(document.activeElement))) {
+          e.preventDefault(); first.focus();
+        }
+      }
+      return;
+    }
     if (e.key !== "Escape") return;
     if (document.body.classList.contains("filters-open")) setFiltersOpen(false);
     const actionsBar = document.querySelector("#recipeDetail .detail-actions");
