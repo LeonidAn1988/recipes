@@ -362,7 +362,7 @@ function renderNutrition(total, recipe = null) {
 
   const columns = [
     { key: "perServing", label: total.servings > 0 ? `На порцию (${total.servings} шт.)` : "На порцию" },
-    { key: "per100g", label: "На 100 г готового блюда" },
+    { key: "per100g", label: recipe?.nutritionBasis === "raw-mix" ? "На 100 г сырой заготовки" : "На 100 г готового блюда" },
     { key: "total", label: `Всё блюдо (${total.yieldMeasured ? "" : "≈ "}${Math.round(total.yieldGrams)} г)` }
   ];
 
@@ -377,8 +377,10 @@ function renderNutrition(total, recipe = null) {
   const yieldText = total.yieldMeasured
     ? `Выход ${Math.round(total.yieldGrams)} г — по вашему взвешиванию.`
     : `Выход ≈ ${Math.round(total.yieldGrams)} г — оценка по способу приготовления; взвесьте готовое блюдо и укажите вес в рецепте, чтобы «на 100 г» было точным.`;
-  note.textContent = total.method === "raw"
-    ? `Без тепловой обработки. ${total.yieldMeasured ? yieldText : ""}`.trim()
+  note.textContent = recipe?.nutritionBasis === "raw-mix"
+    ? "КБЖУ показаны для сырой заготовки до варки. После приготовления изменится масса; точные значения на 100 г готового продукта можно получить, взвесив готовую партию."
+    : total.method === "raw"
+      ? `Без тепловой обработки. ${total.yieldMeasured ? yieldText : ""}`.trim()
     : `${methodLabel(total.method)}: учтены потери при тепловой обработке — ${Math.round(total.raw.kcal - total.kcal)} ккал на всё блюдо. ${yieldText}`;
   summaryEl.appendChild(note);
 
@@ -472,7 +474,7 @@ function renderIngredientsTable(recipe, rows, total) {
   const raw = total.raw;
   const cooked = total.method !== "raw";
   tfoot.appendChild(buildRow([
-    { text: cooked ? "Итого, сырые продукты" : "Итого" },
+    { text: recipe?.nutritionBasis === "raw-mix" ? "Итого, сырая заготовка" : cooked ? "Итого, сырые продукты" : "Итого" },
     { text: "" },
     { text: "" },
     { text: Math.round(raw.grams), cls: "num" },

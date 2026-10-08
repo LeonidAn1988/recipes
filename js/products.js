@@ -68,6 +68,10 @@ const BUILTIN_PRODUCTS = [
   { name: "Свинина нежирная", category: "Мясо, птица, рыба", kcal: 142, protein: 19.4, fat: 7.1, carbs: 0, gi: null, units: {} },
   { name: "Курица (грудка)", category: "Мясо, птица, рыба", kcal: 113, protein: 23.6, fat: 1.9, carbs: 0.4, gi: null, units: {} },
   { name: "Курица (бедро)", category: "Мясо, птица, рыба", kcal: 185, protein: 16.8, fat: 12.4, carbs: 0, gi: null, units: {} },
+  // USDA FoodData Central SR Legacy 171531: turkey thigh, meat only, raw (per 100 g).
+  { name: "Индейка (бедро без кожи сырое)", category: "Мясо, птица, рыба", kcal: 108, protein: 21.28, fat: 2.5, carbs: 0.15, gi: null, units: {} },
+  // USDA FoodData Central SR Legacy 171098: turkey breast, meat only, raw (per 100 g).
+  { name: "Индейка (грудка без кожи сырая)", category: "Мясо, птица, рыба", kcal: 114, protein: 23.66, fat: 1.48, carbs: 0.14, gi: null, units: {} },
   { name: "Индейка (грудка)", category: "Мясо, птица, рыба", kcal: 84, protein: 19.2, fat: 0.7, carbs: 0, gi: null, units: {} },
   { name: "Фарш говяжий", category: "Мясо, птица, рыба", kcal: 254, protein: 17.2, fat: 20, carbs: 0, gi: null, units: {} },
   { name: "Фарш куриный", category: "Мясо, птица, рыба", kcal: 143, protein: 17.4, fat: 8.1, carbs: 0, gi: null, units: {} },
