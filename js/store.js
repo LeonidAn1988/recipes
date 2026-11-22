@@ -123,6 +123,20 @@ function loadRecipes() {
   let tagsAdded = false;
   stored.forEach(r => {
     const seed = DEFAULT_RECIPES.find(d => d.id === r.id);
+    // Исправления применяем, пока исходные состав, шаги и порции сохранены.
+    // Изменённую семьёй рецептуру сохраняем целиком, заметки — отдельно.
+    const previous = STARTER_RECIPE_PREVIOUS[r.id];
+    if (seed && previous && ["ingredients", "steps", "servings"].every(field =>
+      JSON.stringify(r[field]) === JSON.stringify(previous[field]))) {
+      Object.entries(previous).forEach(([field, value]) => {
+        if (JSON.stringify(r[field] ?? null) === JSON.stringify(value) &&
+            JSON.stringify(r[field]) !== JSON.stringify(seed[field])) {
+          r[field] = structuredClone(seed[field]);
+          r.updatedAt = new Date().toISOString();
+          tagsAdded = true;
+        }
+      });
+    }
     if (Object.hasOwn(r, "sourceText")) {
       delete r.sourceText;
       tagsAdded = true;

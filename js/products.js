@@ -64,6 +64,8 @@ const BUILTIN_PRODUCTS = [
   { name: "Заварной крем ванильный", category: "Молочные и яйца", kcal: 120, protein: 3, fat: 4, carbs: 18, gi: 40, units: { "мл": 1 } },
 
   // Мясо, птица, рыба
+  // USDA FoodData Central 169451 — Beef, variety meats and by-products, liver, raw.
+  { name: "Печень говяжья", category: "Мясо, птица, рыба", kcal: 135, protein: 20.36, fat: 3.63, carbs: 3.89, gi: null, units: {} },
   { name: "Говядина", category: "Мясо, птица, рыба", kcal: 187, protein: 18.9, fat: 12.4, carbs: 0, gi: null, units: {} },
   { name: "Свинина нежирная", category: "Мясо, птица, рыба", kcal: 142, protein: 19.4, fat: 7.1, carbs: 0, gi: null, units: {} },
   { name: "Курица (грудка)", category: "Мясо, птица, рыба", kcal: 113, protein: 23.6, fat: 1.9, carbs: 0.4, gi: null, units: {} },
@@ -87,6 +89,8 @@ const BUILTIN_PRODUCTS = [
   { name: "Прошутто", category: "Мясо, птица, рыба", kcal: 195, protein: 25, fat: 10, carbs: 0, gi: null, units: {} },
 
   // Крупы, мука, хлеб, макароны
+  // USDA FoodData Central 168874 — Quinoa, uncooked. Углеводы включают клетчатку.
+  { name: "Киноа (сырая)", category: "Крупы и мучное", kcal: 368, protein: 14.12, fat: 6.07, carbs: 64.16, gi: null, units: {} },
   { name: "Мука пшеничная в/с", category: "Крупы и мучное", kcal: 334, protein: 10.3, fat: 1.1, carbs: 69, gi: 70, units: { "ст.л.": 10, "ч.л.": 3, "стакан": 130 } },
   { name: "Рис белый (сырой)", category: "Крупы и мучное", kcal: 344, protein: 6.7, fat: 0.7, carbs: 78.9, gi: 70, units: { "стакан": 185 } },
   { name: "Рис бурый (сырой)", category: "Крупы и мучное", kcal: 337, protein: 7.4, fat: 2.7, carbs: 72.9, gi: 50, units: { "стакан": 185 } },
@@ -199,6 +203,8 @@ const BUILTIN_PRODUCTS = [
   { name: "Корица молотая", category: "Масла, соусы и специи", kcal: 247, protein: 4, fat: 1.2, carbs: 27.5, gi: null, units: { "ч.л.": 3, "щепотка": 0.3 } },
   { name: "Лавровый лист", category: "Масла, соусы и специи", kcal: 313, protein: 7.6, fat: 8.4, carbs: 48.7, gi: null, units: { "шт": 0.2 } },
   { name: "Сода пищевая", category: "Масла, соусы и специи", kcal: 0, protein: 0, fat: 0, carbs: 0, gi: null, units: { "ч.л.": 5 } },
+  // USDA FoodData Central 171326 — Spices, nutmeg, ground.
+  { name: "Мускатный орех", category: "Масла, соусы и специи", kcal: 525, protein: 5.84, fat: 36.31, carbs: 49.29, gi: null, units: {} },
   { name: "Разрыхлитель", category: "Масла, соусы и специи", kcal: 79, protein: 0, fat: 0, carbs: 40, gi: null, units: { "ч.л.": 4 } },
   { name: "Дрожжи сухие", category: "Масла, соусы и специи", kcal: 325, protein: 41, fat: 7.6, carbs: 28, gi: null, units: { "ч.л.": 3, "ст.л.": 9, "пакетик": 11 } },
   { name: "Кокосовое масло", category: "Масла, соусы и специи", kcal: 862, protein: 0, fat: 100, carbs: 0, gi: null, units: { "мл": 0.92, "ст.л.": 14, "ч.л.": 4.5 } },
