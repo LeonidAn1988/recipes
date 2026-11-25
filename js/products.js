@@ -48,6 +48,8 @@ const BUILTIN_PRODUCTS = [
   { name: "Кефир 1%", category: "Молочные и яйца", kcal: 40, protein: 3, fat: 1, carbs: 4, gi: 25, units: { "мл": 1, "стакан": 250 } },
   { name: "Йогурт натуральный", category: "Молочные и яйца", kcal: 60, protein: 5, fat: 3.2, carbs: 3.5, gi: 35, units: { "мл": 1, "стакан": 250 } },
   { name: "Творог 5%", category: "Молочные и яйца", kcal: 121, protein: 17.2, fat: 5, carbs: 1.8, gi: 30, units: {} },
+  // Пищевая ценность по данным производителя «Простоквашино», творог рассыпчатый 9%.
+  { name: "Творог 9%", category: "Молочные и яйца", kcal: 157, protein: 16, fat: 9, carbs: 3, gi: null, units: {} },
   { name: "Творог обезжиренный", category: "Молочные и яйца", kcal: 71, protein: 16.5, fat: 0.6, carbs: 1.3, gi: 30, units: {} },
   { name: "Сметана 20%", category: "Молочные и яйца", kcal: 206, protein: 2.8, fat: 20, carbs: 3.2, gi: null, units: { "ст.л.": 18 } },
   { name: "Сливки 20%", category: "Молочные и яйца", kcal: 205, protein: 2.8, fat: 20, carbs: 3.7, gi: null, units: { "мл": 1 } },

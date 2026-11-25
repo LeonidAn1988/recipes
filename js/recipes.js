@@ -2083,6 +2083,66 @@ DEFAULT_RECIPES.push({
   ]
 });
 
+DEFAULT_RECIPES.push({
+  id: "cottage-casserole-one-egg-foodru-v1",
+  title: "Творожная запеканка с одним яйцом",
+  category: "Выпечка",
+  time: "1 ч",
+  servings: "6 порций",
+  image: "",
+  video: "",
+  ingredients: [
+    { product: "Творог 9%", amount: 500, unit: "г" },
+    { product: "Яйцо куриное", amount: 1, unit: "шт" },
+    { product: "Мука пшеничная в/с", amount: 20, unit: "г" },
+    { product: "Сахар", amount: 30, unit: "г" },
+    { product: "Сметана 20%", amount: 20, unit: "г" },
+    { product: "Масло сливочное", amount: 20, unit: "г" },
+    { product: "Соль", amount: 1, unit: "щепотка" }
+  ],
+  steps: [
+    {
+      text: "Разогреть духовку до 180 °C. Крупинчатый творог протереть через сито.",
+      kind: "prep"
+    },
+    {
+      text: "Взбить целое яйцо с сахаром до пены. Вмешать творог, муку и щепотку соли.",
+      kind: "prep"
+    },
+    {
+      text: "Застелить форму бумагой для выпечки. Распределить творожную массу ровным слоем, покрыть сметаной и полить растопленным сливочным маслом.",
+      kind: "prep"
+    },
+    {
+      text: "Выпекать при 180 °C около 40 минут. Верх должен подрумяниться, а середина схватиться.",
+      kind: "heat",
+      method: "bake",
+      device: "Духовка",
+      temp: 180,
+      minutes: 40
+    },
+    {
+      text: "Дать запеканке остыть в форме до тёплого состояния, затем нарезать.",
+      kind: "serve"
+    }
+  ],
+  notes: "Вариант на 500 г творога 9% без манки и панировочных сухарей. Количество соли взято из редакционной подборки Food.ru. КБЖУ и выход оценочные. Для расчёта взяты сметана 20% и яйцо с 50 г съедобной части.",
+  source: [
+    {
+      title: "Алёна Сидорова, Food.ru — пошаговый фоторецепт",
+      url: "https://food.ru/recipes/1345-tvorozhnaja-zapekanka"
+    },
+    {
+      title: "Food.ru — редакционная подборка с дозировкой соли",
+      url: "https://food.ru/articles/5751-15-bliud-iz-tvoroga"
+    },
+    {
+      title: "Простоквашино — справочные данные для творога 9%",
+      url: "https://prostokvashino.ru/product/tvorog-rassypchatyi-9-320-g/"
+    }
+  ]
+});
+
 // Предыдущие значения для обновления исходной карточки на устройствах семьи.
 // Поля, которые пользователь изменил, сохраняются в loadRecipes.
 const STARTER_RECIPE_PREVIOUS = {
@@ -2187,6 +2247,7 @@ const STARTER_RECIPE_PREVIOUS = {
 };
 
 const STARTER_TAGS = {
+  "cottage-casserole-one-egg-foodru-v1": ["творог", "запеканка", "детские", "без манки", "в духовке", "сладкое"],
   "casserole-turkey-zucchini-carrot-child-v1": ["индейка", "запеканка", "кабачок", "морковь", "детские", "в духовке"],
   "souffle-beef-liver-say7-v1": ["печень", "суфле", "говядина", "морковь", "в духовке"],
   "bulgur-carrot-onion-quinoa-v1": ["гарнир", "булгур", "киноа", "морковь", "постное"],
@@ -2243,6 +2304,7 @@ DEFAULT_RECIPES.forEach(r => { r.tags = STARTER_TAGS[r.id] || []; });
 // сохранённую книгу рецептам, у которых способа ещё нет (см. store.js).
 // Вафли пекутся в вафельнице — это выпечка.
 const STARTER_METHODS = {
+  "cottage-casserole-one-egg-foodru-v1": "bake",
   "casserole-turkey-zucchini-carrot-child-v1": "bake",
   "souffle-beef-liver-say7-v1": "bake",
   "bulgur-carrot-onion-quinoa-v1": "stew",
